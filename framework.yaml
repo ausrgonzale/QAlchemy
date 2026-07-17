@@ -1,0 +1,92 @@
+#
+# Automation Framework Configuration
+#
+# Version 1.0
+#
+
+#
+# Framework Metadata
+#
+framework:
+  name: "Automation Framework"
+  version: "1.0.0"
+
+#
+# AI Provider Configuration
+#
+# Defines the default AI provider, model, and generation settings used
+# throughout the framework. Individual scripts may override these values
+# at runtime when appropriate.
+#
+ai:
+  provider: "ollama"
+  default_model: "gpt-oss:120b-cloud"
+  request_timeout: 120
+  stream: false
+
+  options:
+    temperature: 0.2
+    top_p: 0.95
+    max_tokens: 4096
+    seed: null
+
+#
+# AI Prompt Library
+#
+# Prompt assets used to construct AI system prompts.
+# The PromptBuilderService combines these files to produce the final
+# instruction set sent to the selected AI provider.
+#
+prompts:
+  root: "prompts"
+
+  code_standards: "code_standards.md"
+  python_standards: "python_standards.md"
+  playwright_standards: "playwright_standards.md"
+
+  generation_instructions: "generation_instructions.md"
+  review_instructions: "review_instructions.md"
+
+  markdown_contract: "markdown_contract.md"
+
+#
+# Report Templates
+#
+# Markdown templates used to render framework-generated reports.
+#
+templates:
+  root: "templates"
+  code_review_report: "code_review_report_template.md"
+#
+# Report Generation
+#
+# Controls report output locations and configurable report content.
+#
+reports:
+  output_root: "reports"
+  debug_output_root: "reports/debug"
+
+  review:
+    fields:
+      source_file: true
+      lines_reviewed: true
+      provider: true
+      model: true
+      execution_time: true
+      review_date: true
+
+#
+# Framework Logging
+#
+# Controls framework logging behavior and Debug 
+# configuration
+#
+
+logging:
+  level: "INFO"
+  debug:
+    enabled: true
+    save_prompt: true
+    save_response: true
+    overwrite_files: true
+
