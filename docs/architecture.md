@@ -12,7 +12,7 @@ flowchart TD
   AIC --> OLLAMA[Ollama]
   CRS --> RC[RuntimeContext]
   CLI --> RW[ReportWriter]
-  RW --> FCS[FrameworkConfigurationService]
+  RW --> ACS[AppConfigurationService]
   RW --> FS[(File System)]
   RC --> RW
 ```
@@ -59,7 +59,7 @@ Formats and persists Markdown review reports to disk.
 - Any workflow that needs persisted AI review output.
 
 ### Downstream Dependencies (What this component uses)
-- `ai.services.framework_configuration_service.FrameworkConfigurationService`
+- `services.app_configuration_service.AppConfigurationService`
   - Reads:
     - `reports.review.template`
     - `reports.review.fields.*`
@@ -78,7 +78,7 @@ Formats and persists Markdown review reports to disk.
 
 ```mermaid
 flowchart LR
-  FW[framework.yaml] --> P1[prompts.root]
+  FW[app.yaml] --> P1[prompts.root]
   FW --> P2[prompts.code_standards]
   FW --> P3[prompts.python_standards]
   FW --> P4[prompts.playwright_standards]

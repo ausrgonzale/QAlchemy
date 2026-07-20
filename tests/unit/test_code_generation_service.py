@@ -8,16 +8,17 @@ from types import ModuleType
 
 import pytest
 
-from services.framework_configuration_service import FrameworkConfigurationService
+from services.app_configuration_service import AppConfigurationService
 
 
 def _import_generation_service_or_skip(monkeypatch: pytest.MonkeyPatch) -> ModuleType:
     """Import code generation service module with test-safe configuration stubs."""
 
     fake_config = {
-        "framework": {
+        "app": {
             "name": "Automation Framework",
             "version": "1.0.0",
+            "edition": "Community",
         },
         "ai": {
             "provider": "ollama",
@@ -64,12 +65,12 @@ def _import_generation_service_or_skip(monkeypatch: pytest.MonkeyPatch) -> Modul
     }
 
     monkeypatch.setattr(
-        FrameworkConfigurationService,
+        AppConfigurationService,
         "_load_configuration",
         lambda self: fake_config,
     )
 
-    print(FrameworkConfigurationService()._config.keys())
+    print(AppConfigurationService()._config.keys())
 
     sys.modules.pop("services.prompt_loader_service", None)
     sys.modules.pop("services.prompt_builder_service", None)

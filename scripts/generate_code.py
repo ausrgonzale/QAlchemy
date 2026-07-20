@@ -84,7 +84,12 @@ def main() -> None:
     with open(output_path, "w", encoding="utf-8") as file:
         file.write(response.rstrip() + "\n")
 
-    print(f"Code written to: {output_path.resolve()}")
+    try:
+        display_path = output_path.resolve().relative_to(Path.cwd())
+    except ValueError:
+        display_path = output_path.resolve()
+
+    print(f"Code written to: {display_path}")
 
 
 if __name__ == "__main__":

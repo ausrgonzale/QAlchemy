@@ -46,7 +46,7 @@ def test_build_uses_default_model_when_no_override(
             captured["stream"] = stream
 
     monkeypatch.setattr(
-        "services.ai_client_builder_service.FrameworkConfigurationService",
+        "services.ai_client_builder_service.AppConfigurationService",
         FakeConfig,
     )
     monkeypatch.setattr(
@@ -95,7 +95,7 @@ def test_build_uses_model_override(
             captured["stream"] = stream
 
     monkeypatch.setattr(
-        "services.ai_client_builder_service.FrameworkConfigurationService",
+        "services.ai_client_builder_service.AppConfigurationService",
         FakeConfig,
     )
     monkeypatch.setattr(

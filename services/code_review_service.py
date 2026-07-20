@@ -57,8 +57,8 @@ Created:
 
 from runtime_context import RuntimeContext
 from services.ai_client_builder_service import AIClientBuilderService
-from services.framework_configuration_service import (
-    FrameworkConfigurationService,
+from services.app_configuration_service import (
+    AppConfigurationService,
 )
 from services.prompt_builder_service import PromptBuilderService
 
@@ -104,7 +104,7 @@ class CodeReviewService:
                 "============================================================\n"
             )
 
-            configuration = FrameworkConfigurationService()
+            configuration = AppConfigurationService()
 
             system_prompt, user_prompt = PromptBuilderService.build_prompt(
                 task_prompt=configuration.prompts.review_instructions,

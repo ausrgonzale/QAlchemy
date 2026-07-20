@@ -6,7 +6,7 @@ Description:
     instances used throughout the Automation Framework.
 
     The AIClientBuilderService retrieves AI configuration from the
-    FrameworkConfigurationService and returns a fully configured AIClient.
+    AppConfigurationService and returns a fully configured AIClient.
     This centralizes client creation and ensures all framework components
     use a consistent configuration.
 
@@ -27,10 +27,16 @@ Framework: Automation Framework
 License: MIT
 """
 
-from clients.ai_client import AIClient
-from services.framework_configuration_service import (
-    FrameworkConfigurationService,
+from typing import TYPE_CHECKING
+
+from services.app_configuration_service import (
+    AppConfigurationService,
 )
+
+if TYPE_CHECKING:
+    from clients.ai_client import AIClient
+
+AIClient = None
 
 
 class AIClientBuilderService:
@@ -41,7 +47,7 @@ class AIClientBuilderService:
     @staticmethod
     def build(
         model_override: str | None = None,
-    ) -> AIClient:
+    ) -> "AIClient":
         """
         Build a configured AIClient.
 
@@ -54,14 +60,19 @@ class AIClientBuilderService:
         Returns:
             A fully configured AIClient.
         """
-        config = FrameworkConfigurationService()
+        config = AppConfigurationService()
 
         provider = config.ai.provider
         model = model_override or config.ai.default_model
         request_timeout = config.ai.request_timeout
         stream = config.ai.stream
 
-        return AIClient(
+        client_class = AIClient
+
+        if client_class is None:
+            from clients.ai_client import AIClient as client_class
+
+        return client_class(
             provider=provider,
             model=model,
             request_timeout=request_timeout,

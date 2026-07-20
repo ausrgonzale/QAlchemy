@@ -18,7 +18,7 @@ Created:
 
 from pathlib import Path
 
-from services.framework_configuration_service import FrameworkConfigurationService
+from services.app_configuration_service import AppConfigurationService
 
 
 class PromptLoaderService:
@@ -28,7 +28,7 @@ class PromptLoaderService:
 
     PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
-    _configuration = FrameworkConfigurationService()
+    _configuration = AppConfigurationService()
 
     PROMPTS_DIRECTORY = PROJECT_ROOT / _configuration.prompts.root
 

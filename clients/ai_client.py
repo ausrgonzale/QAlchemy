@@ -9,7 +9,12 @@ This client is intentionally simple and supports a single
 provider (Ollama) for the Toolshop project.
 """
 
-import ollama
+from types import SimpleNamespace
+
+try:
+    import ollama
+except ModuleNotFoundError:
+    ollama = SimpleNamespace(Client=None)
 
 
 class AIClient:
@@ -42,6 +47,11 @@ class AIClient:
         self.model = model
         self.stream = stream
         self.request_timeout = request_timeout
+
+        if ollama.Client is None:
+            raise ModuleNotFoundError(
+                "No module named 'ollama'. Install the ollama package to use AIClient."
+            )
 
         self._client = ollama.Client(
             timeout=self.request_timeout,

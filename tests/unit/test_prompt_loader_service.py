@@ -9,7 +9,7 @@ from types import ModuleType
 
 import pytest
 
-from services.framework_configuration_service import FrameworkConfigurationService
+from services.app_configuration_service import AppConfigurationService
 
 
 def _import_prompt_loader(
@@ -18,9 +18,10 @@ def _import_prompt_loader(
     """Import PromptLoaderService with test configuration."""
 
     fake_config = {
-        "framework": {
+        "app": {
             "name": "Automation Framework",
             "version": "1.0.0",
+            "edition": "Community",
         },
         "ai": {
             "provider": "ollama",
@@ -66,7 +67,7 @@ def _import_prompt_loader(
     }
 
     monkeypatch.setattr(
-        FrameworkConfigurationService,
+        AppConfigurationService,
         "_load_configuration",
         lambda self: fake_config,
     )

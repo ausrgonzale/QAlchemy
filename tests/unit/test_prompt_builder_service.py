@@ -8,12 +8,17 @@ from types import ModuleType
 
 import pytest
 
-from services.framework_configuration_service import FrameworkConfigurationService
+from services.app_configuration_service import AppConfigurationService
 
 
 def _import_prompt_builder_or_skip(monkeypatch: pytest.MonkeyPatch) -> ModuleType:
     """Import prompt builder module with test-safe configuration stubs."""
     fake_config = {
+        "app": {
+            "name": "Automation Framework",
+            "version": "1.0.0",
+            "edition": "Community",
+        },
         "ai": {
             "provider": "ollama",
             "default_model": "m1",
@@ -59,7 +64,7 @@ def _import_prompt_builder_or_skip(monkeypatch: pytest.MonkeyPatch) -> ModuleTyp
     }
 
     monkeypatch.setattr(
-        FrameworkConfigurationService,
+        AppConfigurationService,
         "_load_configuration",
         lambda self: fake_config,
     )
@@ -76,7 +81,7 @@ def test_build_prompt_combines_standard_documents(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Combine standards documents and task prompt into one system prompt."""
-    module = importlib.import_module("services.prompt_builder_service")
+    module = _import_prompt_builder_or_skip(monkeypatch)
 
     loaded = {
         "code_standards.md": "CS",

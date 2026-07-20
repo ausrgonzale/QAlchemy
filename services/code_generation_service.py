@@ -59,8 +59,8 @@ Created:
 """
 
 from services.ai_client_builder_service import AIClientBuilderService
-from services.framework_configuration_service import (
-    FrameworkConfigurationService,
+from services.app_configuration_service import (
+    AppConfigurationService,
 )
 from services.prompt_builder_service import PromptBuilderService
 from services.source_code_preprocessing_service import (
@@ -106,7 +106,7 @@ class CodeGenerationService:
                 f"{source_code}"
             )
 
-        configuration = FrameworkConfigurationService()
+        configuration = AppConfigurationService()
 
         system_prompt, user_prompt = PromptBuilderService.build_prompt(
             task_prompt=configuration.prompts.generation_instructions,

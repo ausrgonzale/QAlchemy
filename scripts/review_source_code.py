@@ -8,10 +8,10 @@ from pathlib import Path
 
 from reporting import ReportWriter
 from runtime_context import RuntimeContext
-from services.code_review_service import CodeReviewService
-from services.framework_configuration_service import (
-    FrameworkConfigurationService,
+from services.app_configuration_service import (
+    AppConfigurationService,
 )
+from services.code_review_service import CodeReviewService
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -78,7 +78,7 @@ def main() -> None:
 
     runtime_context.execution_time = time.perf_counter() - start_time
 
-    configuration = FrameworkConfigurationService()
+    configuration = AppConfigurationService()
 
     writer = ReportWriter(configuration)
 
@@ -87,7 +87,15 @@ def main() -> None:
         runtime_context=runtime_context,
     )
 
-    print(f"\n✓ Review report written to: {runtime_context.destination_file}")
+    if runtime_context.destination_file is not None:
+        try:
+            display_path = runtime_context.destination_file.resolve().relative_to(
+                Path.cwd()
+            )
+        except ValueError:
+            display_path = runtime_context.destination_file.resolve()
+
+        print(f"\n✓ Review report written to: {display_path}")
 
 
 if __name__ == "__main__":

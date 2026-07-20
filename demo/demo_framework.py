@@ -20,6 +20,7 @@ import sys
 from pathlib import Path
 
 DEMO_ROOT = Path(__file__).resolve().parent
+PROJECT_ROOT = DEMO_ROOT.parent
 SAMPLE_CODE_DIR = DEMO_ROOT / "sample_code"
 OUTPUT_DIR = DEMO_ROOT / "output"
 
@@ -31,7 +32,15 @@ def run(command: list[str]) -> None:
     """
     Run a command and fail immediately if it exits with an error.
     """
-    print(f"\n>>> {' '.join(command)}\n")
+
+    display_command = []
+
+    for item in command:
+        try:
+            display_command.append(str(Path(item).resolve().relative_to(PROJECT_ROOT)))
+        except ValueError:
+            display_command.append(item)
+
     subprocess.run(command, check=True)
 
 
@@ -115,8 +124,18 @@ def main() -> None:
     print("Demo Complete")
     print("=" * 60)
 
-    print(f"\nGenerated Source : {SOURCE_FILE.resolve()}")
-    print(f"Review Report    : {REPORT_FILE.resolve()}")
+    try:
+        generated_source = SOURCE_FILE.resolve().relative_to(Path.cwd())
+    except ValueError:
+        generated_source = SOURCE_FILE.resolve()
+
+    try:
+        review_report = REPORT_FILE.resolve().relative_to(Path.cwd())
+    except ValueError:
+        review_report = REPORT_FILE.resolve()
+
+    print(f"\nGenerated Source : {generated_source}")
+    print(f"Review Report    : {review_report}")
 
     print("\nThank you for trying QAlchemy!")
     print("Explore the generated report to see the framework in action.")

@@ -34,8 +34,8 @@ Created:
 ===============================================================================
 """
 
-from services.framework_configuration_service import (
-    FrameworkConfigurationService,
+from services.app_configuration_service import (
+    AppConfigurationService,
 )
 from services.prompt_loader_service import PromptLoaderService
 
@@ -67,7 +67,7 @@ class PromptBuilderService:
                 - user_prompt
         """
 
-        configuration = FrameworkConfigurationService()
+        configuration = AppConfigurationService()
 
         documents = [
             configuration.prompts.code_standards,

@@ -8,16 +8,17 @@ from types import ModuleType, SimpleNamespace
 
 import pytest
 
-from services.framework_configuration_service import FrameworkConfigurationService
+from services.app_configuration_service import AppConfigurationService
 
 
 def _import_review_service_or_skip(monkeypatch: pytest.MonkeyPatch) -> ModuleType:
     """Import code review service module with test-safe configuration stubs."""
 
     fake_config = {
-        "framework": {
+        "app": {
             "name": "Automation Framework",
             "version": "1.0.0",
+            "edition": "Community",
         },
         "ai": {
             "provider": "ollama",
@@ -64,7 +65,7 @@ def _import_review_service_or_skip(monkeypatch: pytest.MonkeyPatch) -> ModuleTyp
     }
 
     monkeypatch.setattr(
-        FrameworkConfigurationService,
+        AppConfigurationService,
         "_load_configuration",
         lambda self: fake_config,
     )

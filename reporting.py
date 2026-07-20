@@ -47,8 +47,8 @@ Created:
 from pathlib import Path
 
 from runtime_context import RuntimeContext
-from services.framework_configuration_service import (
-    FrameworkConfigurationService,
+from services.app_configuration_service import (
+    AppConfigurationService,
 )
 
 
@@ -68,7 +68,7 @@ class ReportWriter:
 
     def __init__(
         self,
-        configuration: FrameworkConfigurationService,
+        configuration: AppConfigurationService,
     ) -> None:
         self._configuration = configuration
 

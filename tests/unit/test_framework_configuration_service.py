@@ -1,10 +1,10 @@
-"""Unit tests for FrameworkConfigurationService."""
+"""Unit tests for AppConfigurationService."""
 
 from __future__ import annotations
 
 import pytest
 
-from services.framework_configuration_service import FrameworkConfigurationService
+from services.app_configuration_service import AppConfigurationService
 
 
 def test_configuration_properties_are_exposed(
@@ -13,9 +13,10 @@ def test_configuration_properties_are_exposed(
     """Expose typed accessors for all supported configuration sections."""
 
     fake_config = {
-        "framework": {
+        "app": {
             "name": "Automation Framework",
             "version": "1.0.0",
+            "edition": "Community",
         },
         "ai": {
             "provider": "ollama",
@@ -62,16 +63,17 @@ def test_configuration_properties_are_exposed(
     }
 
     monkeypatch.setattr(
-        FrameworkConfigurationService,
+        AppConfigurationService,
         "_load_configuration",
         lambda self: fake_config,
     )
 
-    service = FrameworkConfigurationService()
+    service = AppConfigurationService()
 
-    # Framework
-    assert service.framework.name == "Automation Framework"
-    assert service.framework.version == "1.0.0"
+    # App
+    assert service.app.name == "Automation Framework"
+    assert service.app.version == "1.0.0"
+    assert service.app.edition == "Community"
 
     # AI
     assert service.ai.provider == "ollama"

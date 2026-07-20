@@ -10,7 +10,7 @@ import pytest
 import reporting as reporting_module
 from reporting import ReportWriter
 from runtime_context import RuntimeContext
-from services.framework_configuration_service import FrameworkConfigurationService
+from services.app_configuration_service import AppConfigurationService
 
 
 class _Fields:
@@ -38,12 +38,13 @@ def _build_configuration(
     template_root: str,
     template_name: str,
     fields: _Fields,
-) -> FrameworkConfigurationService:
-    """Build a real FrameworkConfigurationService backed by fake config data."""
+) -> AppConfigurationService:
+    """Build a real AppConfigurationService backed by fake config data."""
     fake_config = {
-        "framework": {
+        "app": {
             "name": "Automation Framework",
             "version": "1.0.0",
+            "edition": "Community",
         },
         "ai": {
             "provider": "ollama",
@@ -90,12 +91,12 @@ def _build_configuration(
     }
 
     monkeypatch.setattr(
-        FrameworkConfigurationService,
+        AppConfigurationService,
         "_load_configuration",
         lambda self: fake_config,
     )
 
-    return FrameworkConfigurationService()
+    return AppConfigurationService()
 
 
 def _build_writer(
