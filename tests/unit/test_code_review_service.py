@@ -11,7 +11,7 @@ import pytest
 from services.app_configuration_service import AppConfigurationService
 
 
-def _import_review_service_or_skip(monkeypatch: pytest.MonkeyPatch) -> ModuleType:
+def _import_review_service(monkeypatch: pytest.MonkeyPatch) -> ModuleType:
     """Import code review service module with test-safe configuration stubs."""
 
     fake_config = {
@@ -81,7 +81,7 @@ def test_execute_sets_runtime_context_and_returns_review(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Populate runtime context and return AI review output."""
-    module = _import_review_service_or_skip(monkeypatch)
+    module = _import_review_service(monkeypatch)
 
     class FakeClient:
         provider = "ollama"
@@ -114,11 +114,12 @@ def test_execute_sets_runtime_context_and_returns_review(
     assert runtime_context.lines_reviewed == 2
 
 
-def test_execute_returns_error_message_when_failure_occurs(
+def test_execute_reraises_prompt_builder_exceptions(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Return formatted failure message when review workflow raises error."""
-    module = _import_review_service_or_skip(monkeypatch)
+    """Re-raise review workflow exceptions after logging."""
+
+    module = _import_review_service(monkeypatch)
 
     monkeypatch.setattr(
         module.PromptBuilderService,
@@ -131,7 +132,5 @@ def test_execute_returns_error_message_when_failure_occurs(
     runtime_context = SimpleNamespace(provider=None, model=None, lines_reviewed=0)
 
     service = module.CodeReviewService()
-    out = service.execute("print('x')", runtime_context)
-
-    assert "AI code review failed:" in out
-    assert "boom" in out
+    with pytest.raises(RuntimeError, match="boom"):
+        service.execute("print('x')", runtime_context)

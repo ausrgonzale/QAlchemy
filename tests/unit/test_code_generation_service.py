@@ -11,7 +11,7 @@ import pytest
 from services.app_configuration_service import AppConfigurationService
 
 
-def _import_generation_service_or_skip(monkeypatch: pytest.MonkeyPatch) -> ModuleType:
+def _import_generation_service(monkeypatch: pytest.MonkeyPatch) -> ModuleType:
     """Import code generation service module with test-safe configuration stubs."""
 
     fake_config = {
@@ -70,8 +70,6 @@ def _import_generation_service_or_skip(monkeypatch: pytest.MonkeyPatch) -> Modul
         lambda self: fake_config,
     )
 
-    print(AppConfigurationService()._config.keys())
-
     sys.modules.pop("services.prompt_loader_service", None)
     sys.modules.pop("services.prompt_builder_service", None)
     sys.modules.pop("services.code_generation_service", None)
@@ -82,7 +80,7 @@ def test_generate_invokes_builder_client_and_returns_response(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Return generated content from AI client for generation requests."""
-    module = _import_generation_service_or_skip(monkeypatch)
+    module = _import_generation_service(monkeypatch)
 
     class FakeClient:
         def generate(self, system_prompt: str, user_prompt: str) -> str:
@@ -111,7 +109,7 @@ def test_generate_preprocesses_existing_source_code(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Include preprocessed source in prompt when existing source is supplied."""
-    module = _import_generation_service_or_skip(monkeypatch)
+    module = _import_generation_service(monkeypatch)
     captured = {}
 
     class FakeClient:
@@ -141,3 +139,32 @@ def test_generate_preprocesses_existing_source_code(
 
     assert "Existing Source Code" in captured["user_prompt"]
     assert "PREPROCESSED:print('x')" in captured["user_prompt"]
+
+
+def test_generate_reraises_ai_client_exception(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Re-raise AI client exceptions after logging."""
+
+    module = _import_generation_service(monkeypatch)
+
+    class FakeClient:
+        def generate(self, system_prompt: str, user_prompt: str) -> str:
+            raise RuntimeError("AI provider unavailable")
+
+    monkeypatch.setattr(
+        module.PromptBuilderService,
+        "build_prompt",
+        staticmethod(lambda task_prompt, user_prompt: ("SYSTEM", user_prompt)),
+    )
+
+    monkeypatch.setattr(
+        module.AIClientBuilderService,
+        "build",
+        staticmethod(lambda model_override=None: FakeClient()),
+    )
+
+    service = module.CodeGenerationService()
+
+    with pytest.raises(RuntimeError, match="AI provider unavailable"):
+        service.generate(task="Create helper")

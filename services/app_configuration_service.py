@@ -19,10 +19,13 @@ Future Enhancements
 - Configuration hot reload
 """
 
+import logging
 from pathlib import Path
 from typing import Any
 
 import yaml
+
+logger = logging.getLogger(__name__)
 
 
 class ConfigurationError(RuntimeError):
@@ -40,20 +43,20 @@ class ConfigurationSection:
     def __init__(self, config: dict[str, Any]) -> None:
         self._config = config
 
-    def _get(self, key: str) -> Any:
+    def _get(self, key: str, default: Any | None = None) -> Any:
         """
-        Return a required configuration value.
+        Return a configuration value.
 
-        Raises:
-            ConfigurationError:
-                If the requested configuration value does not exist.
+        If a default value is provided, it is returned when the configuration
+        key does not exist. Otherwise, a ConfigurationError is raised.
         """
-        try:
+        if key in self._config:
             return self._config[key]
-        except KeyError as ex:
-            raise ConfigurationError(
-                f"Missing required configuration value: '{key}'."
-            ) from ex
+
+        if default is not None:
+            return default
+
+        raise ConfigurationError(f"Missing required configuration value: '{key}'.")
 
 
 class AppConfiguration(ConfigurationSection):
@@ -219,6 +222,31 @@ class LoggingConfiguration(ConfigurationSection):
     def level(self) -> str:
         return self._get("level")
 
+    @property
+    def output_root(self) -> str:
+        return self._get("output_root")
+
+    @property
+    def output_path(self) -> Path:
+        return Path(self.output_root)
+
+    @property
+    def base_filename(self) -> str:
+        return self._get("base_filename")
+
+    @property
+    def extension(self) -> str:
+        return self._get("extension", "")
+
+    @property
+    def log_file(self) -> Path:
+        extension = self.extension or ".log"
+
+        if not extension.startswith("."):
+            extension = f".{extension}"
+
+        return self.output_path / f"{self.base_filename}{extension}"
+
 
 # ============================================================================
 # App Configuration Service
@@ -234,6 +262,7 @@ class AppConfigurationService:
     through strongly typed configuration objects.
     """
 
+    # Reserved for a future config/ directory.
     _CONFIGURATION_DIRECTORY = ""
     _CONFIGURATION_FILE = "app.yaml"
 
@@ -247,6 +276,8 @@ class AppConfigurationService:
     )
 
     def __init__(self) -> None:
+        logger.info("Starting application configuration load.")
+
         self._config = self._load_configuration()
 
         self.app = AppConfiguration(self._section("app"))
@@ -255,6 +286,8 @@ class AppConfigurationService:
         self.templates = TemplateConfiguration(self._section("templates"))
         self.reports = ReportsConfiguration(self._section("reports"))
         self.logging = LoggingConfiguration(self._section("logging"))
+
+        logger.info("Application configuration load completed successfully.")
 
     def load(self) -> "AppConfigurationService":
         """
@@ -276,6 +309,7 @@ class AppConfigurationService:
         try:
             return self._config[name]
         except KeyError as ex:
+            logger.exception("Missing required configuration section: '%s'.", name)
             raise ConfigurationError(
                 f"Missing required configuration section: '{name}'."
             ) from ex
@@ -295,33 +329,47 @@ class AppConfigurationService:
             / self._CONFIGURATION_FILE
         )
 
+        logger.debug("Loading configuration file: %s", configuration_file)
+
         if not configuration_file.exists():
+            logger.error("Configuration file not found: %s", configuration_file)
             raise ConfigurationError(
                 "Configuration file not found:\n" f"  {configuration_file}"
             )
 
         try:
-            with configuration_file.open(
-                mode="r",
-                encoding="utf-8",
-            ) as file:
+            with configuration_file.open(mode="r", encoding="utf-8") as file:
                 configuration = yaml.safe_load(file) or {}
 
-        except yaml.YAMLError as ex:
+        except OSError as ex:
+            logger.exception(
+                "Unable to read configuration file: %s", configuration_file
+            )
             raise ConfigurationError(
-                "Unable to parse application configuration.\n"
-                f"File: {configuration_file}"
+                f"Unable to read configuration file '{configuration_file}'."
+            ) from ex
+
+        except yaml.YAMLError as ex:
+            logger.exception(
+                "Unable to parse configuration file: %s", configuration_file
+            )
+            raise ConfigurationError(
+                f"Unable to parse configuration file '{configuration_file}'."
             ) from ex
 
         if not isinstance(configuration, dict):
+            logger.error("Configuration file does not contain a top-level mapping.")
             raise ConfigurationError(
                 "The application configuration must contain a " "top-level mapping."
             )
 
         for section in self._REQUIRED_SECTIONS:
             if section not in configuration:
+                logger.error("Missing required configuration section: %s", section)
                 raise ConfigurationError(
                     "Missing required configuration section:\n" f"  {section}"
                 )
+
+        logger.debug("Configuration file loaded and validated successfully.")
 
         return configuration

@@ -3,7 +3,7 @@
 File Descriptor Header
 ===============================================================================
 File:
-    review_instructions_service.py
+    code_review_service.py
 
 Purpose:
     Provides AI-assisted source code review services for the
@@ -55,12 +55,16 @@ Created:
 ===============================================================================
 """
 
+import logging
+
 from runtime_context import RuntimeContext
 from services.ai_client_builder_service import AIClientBuilderService
 from services.app_configuration_service import (
     AppConfigurationService,
 )
 from services.prompt_builder_service import PromptBuilderService
+
+logger = logging.getLogger(__name__)
 
 
 class CodeReviewService:
@@ -88,9 +92,12 @@ class CodeReviewService:
             AI-generated review feedback.
 
         Raises:
-            No exceptions are propagated. Any unexpected error
-            is returned as a formatted error message.
+            Exception:
+                Re-raises any unexpected exception encountered during the code review workflow after logging the error.
         """
+
+        logger.info("Starting code review.")
+
         try:
 
             user_prompt = (
@@ -106,12 +113,18 @@ class CodeReviewService:
 
             configuration = AppConfigurationService()
 
+            logger.info("Building AI prompts.")
+
             system_prompt, user_prompt = PromptBuilderService.build_prompt(
                 task_prompt=configuration.prompts.review_instructions,
                 user_prompt=user_prompt,
             )
 
             # Create a new AI client instance for this review operation.
+
+            if model_override is not None:
+                logger.debug(f"Using model override: {model_override}")
+
             client = AIClientBuilderService.build(
                 model_override=model_override,
             )
@@ -122,11 +135,18 @@ class CodeReviewService:
             runtime_context.lines_reviewed = len(source_code.splitlines())
 
             # Send the formatted prompt to the model and return the generated review.
-            return client.generate(
+
+            logger.info("Invoking AI provider.")
+
+            response = client.generate(
                 system_prompt=system_prompt,
                 user_prompt=user_prompt,
             )
 
-        except Exception as error:
-            # Return error message without raising to allow graceful degradation.
-            return f"AI code review failed: {error}"
+            logger.info("Code review completed successfully.")
+
+            return response
+
+        except Exception:
+            logger.exception("Code review failed.")
+            raise

@@ -16,9 +16,12 @@ Created:
     June 2026
 """
 
+import logging
 from pathlib import Path
 
 from services.app_configuration_service import AppConfigurationService
+
+logger = logging.getLogger(__name__)
 
 
 class PromptLoaderService:
@@ -47,8 +50,24 @@ class PromptLoaderService:
         Raises:
             FileNotFoundError:
                 If the prompt template cannot be found.
+            Exception:
+                Re-raises any unexpected exception encountered while
+                loading the prompt file after logging the error.
         """
 
-        prompt_file = cls.PROMPTS_DIRECTORY / filename
+        logger.info("Starting prompt load.")
 
-        return prompt_file.read_text(encoding="utf-8")
+        try:
+            prompt_file = cls.PROMPTS_DIRECTORY / filename
+
+            logger.debug("Loading prompt file: %s", prompt_file)
+
+            prompt_text = prompt_file.read_text(encoding="utf-8")
+
+            logger.info("Prompt load completed successfully.")
+
+            return prompt_text
+
+        except Exception:
+            logger.exception("Prompt load failed for '%s'.", filename)
+            raise

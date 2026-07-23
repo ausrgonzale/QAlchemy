@@ -34,10 +34,14 @@ Created:
 ===============================================================================
 """
 
+import logging
+
 from services.app_configuration_service import (
     AppConfigurationService,
 )
 from services.prompt_loader_service import PromptLoaderService
+
+logger = logging.getLogger(__name__)
 
 
 class PromptBuilderService:
@@ -45,7 +49,7 @@ class PromptBuilderService:
     Builds complete AI prompts from reusable prompt templates.
 
     This service combines the framework standards with a task-specific
-    prompt and the supplied source code to produce a prompt suitable
+    prompt and user prompt to produce a prompt suitable
     for submission to an AI model.
     """
 
@@ -55,31 +59,48 @@ class PromptBuilderService:
         user_prompt: str,
     ) -> tuple[str, str]:
         """
-        Build the system and user prompts for an AI code review.
+        Build the system and user prompts for an AI workflow.
 
         Args:
-            source_code:
-                Source code to be reviewed.
+            task_prompt:
+                Task-specific prompt document filename.
+
+            user_prompt:
+                Caller-provided user prompt content.
 
         Returns:
             A tuple containing:
                 - system_prompt
                 - user_prompt
+
+        Raises:
+            Exception:
+                Re-raises any unexpected exception encountered during prompt
+                assembly after logging the error.
         """
 
-        configuration = AppConfigurationService()
+        logger.info("Starting prompt assembly.")
 
-        documents = [
-            configuration.prompts.code_standards,
-            configuration.prompts.python_standards,
-            configuration.prompts.playwright_standards,
-            task_prompt,
-        ]
+        try:
+            configuration = AppConfigurationService()
 
-        system_prompt = (
-            "\n\n------------------------------------------------------------\n\n".join(
+            documents = [
+                configuration.prompts.code_standards,
+                configuration.prompts.python_standards,
+                configuration.prompts.playwright_standards,
+                task_prompt,
+            ]
+
+            logger.debug("Loading %d prompt documents.", len(documents))
+
+            system_prompt = "\n\n------------------------------------------------------------\n\n".join(
                 PromptLoaderService.load(document) for document in documents
             )
-        )
 
-        return system_prompt, user_prompt
+            logger.info("Prompt assembly completed successfully.")
+
+            return system_prompt, user_prompt
+
+        except Exception:
+            logger.exception("Prompt assembly failed.")
+            raise

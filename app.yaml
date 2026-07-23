@@ -84,6 +84,10 @@ reports:
 
 logging:
   level: "INFO"
+  output_root: logs
+  base_filename: qalchemy
+  extension: ""
+  
   debug:
     enabled: true
     save_prompt: true

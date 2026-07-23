@@ -27,6 +27,7 @@ Framework: Automation Framework
 License: MIT
 """
 
+import logging
 from typing import TYPE_CHECKING
 
 from services.app_configuration_service import (
@@ -37,6 +38,8 @@ if TYPE_CHECKING:
     from clients.ai_client import AIClient
 
 AIClient = None
+
+logger = logging.getLogger(__name__)
 
 
 class AIClientBuilderService:
@@ -59,22 +62,39 @@ class AIClientBuilderService:
 
         Returns:
             A fully configured AIClient.
+
+        Raises:
+            Exception:
+                Re-raises any unexpected exception encountered while
+                constructing the AI client after logging the error.
         """
-        config = AppConfigurationService()
+        logger.info("Starting AI client construction.")
 
-        provider = config.ai.provider
-        model = model_override or config.ai.default_model
-        request_timeout = config.ai.request_timeout
-        stream = config.ai.stream
+        try:
+            config = AppConfigurationService()
 
-        client_class = AIClient
+            provider = config.ai.provider
+            model = model_override or config.ai.default_model
+            request_timeout = config.ai.request_timeout
+            stream = config.ai.stream
 
-        if client_class is None:
-            from clients.ai_client import AIClient as client_class
+            if model_override is not None:
+                logger.debug("Using model override: %s", model_override)
 
-        return client_class(
-            provider=provider,
-            model=model,
-            request_timeout=request_timeout,
-            stream=stream,
-        )
+            client_class = AIClient
+
+            if client_class is None:
+                from clients.ai_client import AIClient as client_class
+
+            logger.info("AI client construction completed successfully.")
+
+            return client_class(
+                provider=provider,
+                model=model,
+                request_timeout=request_timeout,
+                stream=stream,
+            )
+
+        except Exception:
+            logger.exception("AI client construction failed.")
+            raise

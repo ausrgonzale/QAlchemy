@@ -13,12 +13,15 @@ Usage:
 
 from __future__ import annotations
 
+import logging
 import subprocess
 import sys
 import time
 from pathlib import Path
 
 from services.app_configuration_service import AppConfigurationService
+
+logger = logging.getLogger(__name__)
 
 
 class ValidationError(RuntimeError):
@@ -45,6 +48,7 @@ class Validator:
 
     @staticmethod
     def status(message: str):
+        logger.info(message)
         print(f"✓ {message}")
 
     # ------------------------------------------------------------------
@@ -113,6 +117,8 @@ class Validator:
     def run(self):
         start = time.perf_counter()
 
+        logger.info("Starting project validation.")
+
         try:
             self.validate_environment()
             self.validate_project_structure()
@@ -120,10 +126,12 @@ class Validator:
 
             elapsed = time.perf_counter() - start
 
+            logger.info("Project validation completed successfully.")
             print(f"\nProject Validation PASSED ({elapsed:.2f}s)")
             return 0
 
         except Exception as exc:
+            logger.exception("Project validation failed.")
             print(f"\nProject Validation FAILED: {exc}")
             return 1
 

@@ -2,17 +2,18 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import pytest
 
 from services.app_configuration_service import AppConfigurationService
 
 
-def test_configuration_properties_are_exposed(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Expose typed accessors for all supported configuration sections."""
+@pytest.fixture
+def fake_configuration() -> dict[str, Any]:
+    """Return a valid application configuration for unit tests."""
 
-    fake_config = {
+    return {
         "app": {
             "name": "Automation Framework",
             "version": "1.0.0",
@@ -53,6 +54,9 @@ def test_configuration_properties_are_exposed(
         },
         "logging": {
             "level": "INFO",
+            "output_root": "logs",
+            "base_filename": "qalchemy",
+            "extension": "log",
             "debug": {
                 "enabled": True,
                 "save_prompt": True,
@@ -62,10 +66,17 @@ def test_configuration_properties_are_exposed(
         },
     }
 
+
+def test_configuration_properties_are_exposed(
+    monkeypatch: pytest.MonkeyPatch,
+    fake_configuration: dict[str, Any],
+) -> None:
+    """Expose typed accessors for all supported configuration sections."""
+
     monkeypatch.setattr(
         AppConfigurationService,
         "_load_configuration",
-        lambda self: fake_config,
+        lambda self: fake_configuration,
     )
 
     service = AppConfigurationService()
@@ -107,8 +118,13 @@ def test_configuration_properties_are_exposed(
 
     # Logging
     assert service.logging.level == "INFO"
+    assert service.logging.output_root == "logs"
+    assert service.logging.base_filename == "qalchemy"
+    assert service.logging.extension == "log"
+    assert service.logging.log_file.name == "qalchemy.log"
 
     # Debug
+    assert service.logging.debug.enabled is True
     assert service.logging.debug.save_prompt is True
     assert service.logging.debug.save_response is True
     assert service.logging.debug.overwrite_files is True

@@ -19,7 +19,10 @@ Created:
 
 import ast
 import io
+import logging
 import tokenize
+
+logger = logging.getLogger(__name__)
 
 
 class SourceCodePreprocessingService:
@@ -32,21 +35,33 @@ class SourceCodePreprocessingService:
         """
         Remove Python comments while preserving executable code.
         """
-        output = []
+        logger.debug("Starting comment removal.")
 
-        tokens = tokenize.generate_tokens(io.StringIO(source_code).readline)
+        try:
+            output = []
 
-        for token in tokens:
-            if token.type != tokenize.COMMENT:
-                output.append(token)
+            tokens = tokenize.generate_tokens(io.StringIO(source_code).readline)
 
-        return tokenize.untokenize(output)
+            for token in tokens:
+                if token.type != tokenize.COMMENT:
+                    output.append(token)
+
+            cleaned = tokenize.untokenize(output)
+
+            logger.debug("Comment removal completed successfully.")
+
+            return cleaned
+
+        except Exception:
+            logger.exception("Comment removal failed.")
+            raise
 
     @staticmethod
     def remove_docstrings(source_code: str) -> str:
         """
         Remove module, class, and function docstrings.
         """
+        logger.debug("Starting docstring removal.")
 
         class DocstringRemover(ast.NodeTransformer):
             def visit_FunctionDef(self, node):
@@ -101,11 +116,20 @@ class SourceCodePreprocessingService:
 
                 return node
 
-        tree = ast.parse(source_code)
-        tree = DocstringRemover().visit(tree)
-        ast.fix_missing_locations(tree)
+        try:
+            tree = ast.parse(source_code)
+            tree = DocstringRemover().visit(tree)
+            ast.fix_missing_locations(tree)
 
-        return ast.unparse(tree)
+            cleaned = ast.unparse(tree)
+
+            logger.debug("Docstring removal completed successfully.")
+
+            return cleaned
+
+        except Exception:
+            logger.exception("Docstring removal failed.")
+            raise
 
     @classmethod
     def preprocess(
@@ -131,11 +155,19 @@ class SourceCodePreprocessingService:
         Returns:
             Preprocessed source code.
         """
+        logger.info("Starting source preprocessing.")
 
-        if remove_comments:
-            source_code = cls.remove_comments(source_code)
+        try:
+            if remove_comments:
+                source_code = cls.remove_comments(source_code)
 
-        if remove_docstrings:
-            source_code = cls.remove_docstrings(source_code)
+            if remove_docstrings:
+                source_code = cls.remove_docstrings(source_code)
 
-        return source_code
+            logger.info("Source preprocessing completed successfully.")
+
+            return source_code
+
+        except Exception:
+            logger.exception("Source preprocessing failed.")
+            raise

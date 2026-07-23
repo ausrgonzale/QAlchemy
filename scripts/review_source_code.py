@@ -3,6 +3,7 @@ Review source code using the AI code review service.
 """
 
 import argparse
+import logging
 import time
 from pathlib import Path
 
@@ -12,6 +13,8 @@ from services.app_configuration_service import (
     AppConfigurationService,
 )
 from services.code_review_service import CodeReviewService
+
+logger = logging.getLogger(__name__)
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -50,52 +53,61 @@ def main() -> None:
     Review the supplied source code file using AI.
     """
 
-    args = parse_arguments()
+    logger.info("Starting code review script.")
 
-    source_path = Path(args.source)
+    try:
+        args = parse_arguments()
 
-    if not source_path.is_file():
-        raise FileNotFoundError(f"Source file not found: {source_path}")
+        source_path = Path(args.source)
 
-    source_code = source_path.read_text(encoding="utf-8")
+        if not source_path.is_file():
+            raise FileNotFoundError(f"Source file not found: {source_path}")
 
-    runtime_context = RuntimeContext()
+        source_code = source_path.read_text(encoding="utf-8")
 
-    if args.output:
-        runtime_context.destination_file = Path(args.output)
+        runtime_context = RuntimeContext()
 
-    runtime_context.source_file = source_path
+        if args.output:
+            runtime_context.destination_file = Path(args.output)
 
-    start_time = time.perf_counter()
+        runtime_context.source_file = source_path
 
-    service = CodeReviewService()
+        start_time = time.perf_counter()
 
-    review = service.execute(
-        source_code,
-        runtime_context=runtime_context,
-        model_override=args.model,
-    )
+        service = CodeReviewService()
 
-    runtime_context.execution_time = time.perf_counter() - start_time
+        review = service.execute(
+            source_code,
+            runtime_context=runtime_context,
+            model_override=args.model,
+        )
 
-    configuration = AppConfigurationService()
+        runtime_context.execution_time = time.perf_counter() - start_time
 
-    writer = ReportWriter(configuration)
+        configuration = AppConfigurationService()
 
-    writer.write(
-        review=review,
-        runtime_context=runtime_context,
-    )
+        writer = ReportWriter(configuration)
 
-    if runtime_context.destination_file is not None:
-        try:
-            display_path = runtime_context.destination_file.resolve().relative_to(
-                Path.cwd()
-            )
-        except ValueError:
-            display_path = runtime_context.destination_file.resolve()
+        writer.write(
+            review=review,
+            runtime_context=runtime_context,
+        )
 
-        print(f"\n✓ Review report written to: {display_path}")
+        if runtime_context.destination_file is not None:
+            try:
+                display_path = runtime_context.destination_file.resolve().relative_to(
+                    Path.cwd()
+                )
+            except ValueError:
+                display_path = runtime_context.destination_file.resolve()
+
+            print(f"\n✓ Review report written to: {display_path}")
+
+        logger.info("Code review script completed successfully.")
+
+    except Exception:
+        logger.exception("Code review script failed.")
+        raise
 
 
 if __name__ == "__main__":
