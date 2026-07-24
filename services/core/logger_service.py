@@ -5,7 +5,7 @@ LoggerService creates structured LogEntry objects and delegates
 output to the Logger.
 """
 
-from datetime import datetime
+from datetime import UTC, datetime
 
 from scripts.core.log_entry import LogEntry
 from scripts.core.logger import Logger
@@ -34,7 +34,7 @@ class LoggerService:
         """Create and write a structured log entry."""
 
         entry = LogEntry(
-            timestamp=datetime.now(),
+            timestamp=datetime.now(UTC),
             level=level,
             component=self._component,
             operation=operation,

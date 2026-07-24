@@ -73,7 +73,7 @@ def _import_prompt_builder_or_skip(monkeypatch: pytest.MonkeyPatch) -> ModuleTyp
     sys.modules.pop("services.prompt_builder_service", None)
     try:
         return importlib.import_module("services.prompt_builder_service")
-    except Exception as exc:  # pragma: no cover - explicit skip path
+    except ImportError as exc:  # pragma: no cover - explicit skip path
         pytest.skip(f"Skipping prompt_builder_service due to partial state: {exc}")
 
 

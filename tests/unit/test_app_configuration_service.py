@@ -128,3 +128,13 @@ def test_configuration_properties_are_exposed(
     assert service.logging.debug.save_prompt is True
     assert service.logging.debug.save_response is True
     assert service.logging.debug.overwrite_files is True
+
+
+def test_live_configuration_exposes_required_app_metadata() -> None:
+    """Load the repository configuration from its production location."""
+
+    service = AppConfigurationService()
+
+    assert service.app.name == "QAlchemy"
+    assert service.app.version == "1.1.0"
+    assert service.app.edition == "Community"

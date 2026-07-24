@@ -2,7 +2,7 @@
 Application Configuration Service
 
 Loads and provides strongly typed, read-only access to the application
-configuration stored in app.yaml.
+configuration stored in config/app.yaml.
 
 Version 1.1 Responsibilities
 ----------------------------
@@ -262,8 +262,7 @@ class AppConfigurationService:
     through strongly typed configuration objects.
     """
 
-    # Reserved for a future config/ directory.
-    _CONFIGURATION_DIRECTORY = ""
+    _CONFIGURATION_DIRECTORY = "config"
     _CONFIGURATION_FILE = "app.yaml"
 
     _REQUIRED_SECTIONS = (

@@ -9,6 +9,7 @@ frequently during development.
 
 Usage:
     python -m scripts.validate_app
+    python scripts/validate_app.py
 """
 
 from __future__ import annotations
@@ -18,6 +19,10 @@ import subprocess
 import sys
 import time
 from pathlib import Path
+
+# Support direct script execution as well as module execution.
+if __package__ in (None, ""):
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from services.app_configuration_service import AppConfigurationService
 
@@ -103,6 +108,7 @@ class Validator:
                 "tests/unit",
             ],
             cwd=self.repo,
+            check=False,
         )
 
         if result.returncode != 0:

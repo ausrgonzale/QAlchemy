@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -135,7 +135,7 @@ def _build_runtime_context(tmp_path: Path) -> RuntimeContext:
     runtime_context.model = "qwen3-coder:480b-cloud"
     runtime_context.execution_time = 3.456
     runtime_context.lines_reviewed = 42
-    runtime_context.review_date = datetime(2026, 7, 13, 10, 15, 30)
+    runtime_context.review_date = datetime(2026, 7, 13, 10, 15, 30, tzinfo=UTC)
     return runtime_context
 
 

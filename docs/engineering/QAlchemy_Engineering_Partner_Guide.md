@@ -1,6 +1,7 @@
+# Version >= 1.1
+
 # QAlchemy Engineering Partner Guide
 
-**Version:** 1.0\
 **Status:** Working Agreement
 
 ------------------------------------------------------------------------

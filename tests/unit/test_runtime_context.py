@@ -9,7 +9,7 @@ Purpose:
     and maintains independent execution state between instances.
 """
 
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 
 from runtime_context import RuntimeContext
@@ -46,7 +46,7 @@ class TestRuntimeContext:
 
         context.execution_time = 4.25
 
-        review_date = datetime(2026, 7, 11, 9, 30, 0)
+        review_date = datetime(2026, 7, 11, 9, 30, 0, tzinfo=UTC)
 
         context.review_date = review_date
 

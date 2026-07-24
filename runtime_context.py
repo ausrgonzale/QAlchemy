@@ -13,7 +13,7 @@ Future:
     logging, execution statistics, provider metadata, and workflow support.
 """
 
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 
 
@@ -28,5 +28,5 @@ class RuntimeContext:
         self.destination_file: Path | None = None
 
         self.execution_time: float | None = None
-        self.review_date: datetime = datetime.now()
+        self.review_date: datetime = datetime.now(UTC)
         self.lines_reviewed: int | None = None

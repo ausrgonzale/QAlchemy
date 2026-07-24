@@ -37,7 +37,7 @@ def parse_arguments() -> argparse.Namespace:
         "--model",
         type=str,
         default=None,
-        help="Override the default AI model configured in app.yaml.",
+        help="Override the default AI model configured for the application.",
     )
 
     return parser.parse_args()

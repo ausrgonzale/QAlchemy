@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 
 from scripts.core.logger import Logger
 from scripts.core.logger_config import LoggerConfig
@@ -25,7 +25,8 @@ def test_logger_service_writes_configured_log_file() -> None:
         existing_content = log_file.read_text(encoding="utf-8")
 
     message = (
-        "Validation logger write at " f"{datetime.now().isoformat(timespec='seconds')}"
+        "Validation logger write at "
+        f"{datetime.now(UTC).isoformat(timespec='seconds')}"
     )
 
     logger = Logger(logger_config)
