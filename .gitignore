@@ -67,7 +67,12 @@ htmlcov/
 # -----------------------------------------------------------------------------
 
 # Working documentation
-ai/docs/
+# -----------------------------------------------------------------------------
+# Internal Engineering Documentation (Not distributed with Community Edition)
+# -----------------------------------------------------------------------------
+docs/design/
+docs/engineering/
+docs/instructions/
 
 # Generated reports
 reports/
