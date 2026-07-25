@@ -67,9 +67,14 @@ htmlcov/
 # -----------------------------------------------------------------------------
 
 # Working documentation
-# -----------------------------------------------------------------------------
-# Internal Engineering Documentation (Not distributed with Community Edition)
-# -----------------------------------------------------------------------------
+
+# =============================================================================
+# Internal Documentation
+#
+# These documents are maintained for internal engineering, AI-assisted
+# development, and product planning. They are intentionally excluded from the
+# Community Edition distribution.
+# =============================================================================
 docs/design/
 docs/engineering/
 docs/instructions/
