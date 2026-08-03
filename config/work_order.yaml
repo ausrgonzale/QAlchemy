@@ -1,0 +1,126 @@
+# =============================================================================
+# QAlchemy AI Work Order
+# -----------------------------------------------------------------------------
+# Purpose
+# -------
+# An AI Work Order is the canonical engineering contract used by QAlchemy to
+# describe work that is to be performed by the framework.
+#
+# The Work Order defines one or more AI Units of Work, the engineering
+# objective, supporting artifacts, execution constraints, and the expected
+# response contract required to successfully complete the requested task.
+#
+# The AI Work Order represents WHAT work is to be performed.
+#
+# Runtime Flow
+# ------------
+#   AI Work Order YAML
+#          │
+#          ▼
+#   AIWorkOrderBuilderService
+#          │
+#          ▼
+#   AIWorkOrder (Domain Object)
+#          │
+#          ▼
+#   AIUnitOfWork
+#          │
+#          ▼
+#   PromptBuilderService
+#          │
+#          ▼
+#   AIRequest
+#          │
+#          ▼
+#   AI Provider
+#          │
+#          ▼
+#   AIResponse
+#
+# Relationship to app.yaml
+# ------------------------
+# This file defines WHAT work QAlchemy performs.
+#
+# Framework behavior (AI provider selection, logging, prompt rendering,
+# validation, debugging, and other runtime options) is configured separately
+# in config/app.yaml.
+#
+# Design Principles
+# -----------------
+# • Engineering work is defined as one or more AI Units of Work.
+# • Every AI Unit of Work is independently executable.
+# • Supporting artifacts are explicitly declared.
+# • Expected outputs are defined through a Response Contract.
+# • The Work Order is provider-independent and contains no AI-specific
+#   implementation details.
+#
+# NOTE
+# ----
+# Version 1.2.1 supports a single executable AI Unit of Work.
+# Multiple Units of Work and orchestration are planned for QAlchemy 2.x.
+# =============================================================================
+
+work_order:
+
+  # ---------------------------------------------------------------------------
+  # Work Order Metadata
+  # ---------------------------------------------------------------------------
+  id: ""
+
+  name: ""
+
+  description: ""
+
+  version: ""
+
+  priority: ""
+
+  created_by: ""
+
+  created_on: ""
+
+  # ---------------------------------------------------------------------------
+  # AI Units of Work
+  # ---------------------------------------------------------------------------
+  units_of_work:
+
+    - id: ""
+
+      name: ""
+
+      service: ""
+
+      objective: ""
+
+      # -----------------------------------------------------------------------
+      # AI Instructions
+      # -----------------------------------------------------------------------
+      system_instructions: []
+
+      user_instructions: []
+
+      # -----------------------------------------------------------------------
+      # Supporting Engineering Artifacts
+      # -----------------------------------------------------------------------
+      supporting_artifacts: []
+
+      # -----------------------------------------------------------------------
+      # Execution Constraints
+      # -----------------------------------------------------------------------
+      constraints: {}
+
+      # -----------------------------------------------------------------------
+      # Expected Response Contract
+      # -----------------------------------------------------------------------
+      response_contract:
+
+        format: ""
+
+        template: ""
+
+        required_sections: []
+
+      # -----------------------------------------------------------------------
+      # Reserved for Future Releases
+      # -----------------------------------------------------------------------
+      execution_options: {}

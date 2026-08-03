@@ -1,45 +1,65 @@
 # QAlchemy
 
-**A configuration-driven AI framework for building reusable AI-powered capabilities.**
+**A configuration-driven AI engineering framework for building reusable AI-powered capabilities.**
 
-QAlchemy is a modular Python framework for developing intelligent, maintainable, and reusable AI-powered applications. Rather than creating one-off AI scripts, QAlchemy provides a clean, extensible architecture that separates AI infrastructure from business logic, allowing developers to build scalable AI capabilities that evolve over time.
-
-Built around a service-oriented, configuration-driven architecture, QAlchemy provides reusable components for prompt management, AI provider integration, runtime execution, reporting, and workflow orchestration while remaining independent of any specific application domain.
+QAlchemy is a modular Python framework for developing maintainable, reusable, and extensible AI-powered applications. Rather than building one-off AI scripts, QAlchemy provides a service-oriented architecture that separates AI infrastructure from business capabilities, allowing developers to build intelligent software that evolves over time.
 
 ---
 
-# Features
+# Version 1.1 Highlights
 
-## AI Framework
+QAlchemy v1.1 focuses on strengthening the framework's infrastructure and execution pipeline while maintaining a clean, reusable architecture.
 
-- Configuration-driven architecture
-- Modular service-oriented design
-- AI provider abstraction
-- Configurable model selection
+## New Infrastructure
+
+- Centralized **AppConfigurationService** for strongly typed application configuration.
+- New **Logging Service** providing a consistent framework logging API.
+- New **Exception Handling Service** with a centralized exception catalog and typed framework exceptions.
+- Enhanced **Prompt Builder** based on AI Work Orders.
+- Expanded automated test suite with **110 passing unit tests**.
+
+## Execution Pipeline
+
+Version 1.1 establishes the foundation for a consistent AI execution pipeline.
+
+```text
+Application
+     │
+     ▼
+Configuration
+     │
+     ▼
+AI Work Order
+     │
+     ▼
+Prompt Builder
+     │
+     ▼
+AI Client
+     │
+     ▼
+Generated Result
+     │
+     ▼
+Reporting
+```
+
+The Logging Service and Exception Handling Service are now part of the framework infrastructure and positioned for future integration throughout the execution pipeline.
+
+---
+
+# Current Capabilities
+
+- AI-assisted Code Generation
+- AI-assisted Code Review
+- Configuration-driven execution
 - Prompt management and composition
+- AI provider abstraction
 - Runtime execution context
 - Markdown report generation
-- Template-based output
-- Extensible capability architecture
-
-## AI Integration
-
-- Multi-provider AI client architecture
-- Local and cloud model support
-- Standardized AI request pipeline
-- Prompt engineering framework
-- Configurable runtime behavior
-- Reusable workflow components
-
-## Software Architecture
-
-- Strong separation of concerns
-- Dependency-driven design
+- Template-based reporting
 - Strongly typed configuration
-- Reusable infrastructure services
-- Extensible framework components
-- Framework-first development
-- Testable architecture
+- Service-oriented architecture
 
 ---
 
@@ -47,27 +67,28 @@ Built around a service-oriented, configuration-driven architecture, QAlchemy pro
 
 Most AI projects begin as small scripts that quickly become difficult to maintain, extend, and reuse.
 
-QAlchemy was created to provide a reusable foundation for building AI-powered applications by separating common AI infrastructure from domain-specific capabilities.
+QAlchemy provides a reusable engineering foundation by separating common AI infrastructure from application-specific capabilities.
 
-Instead of rewriting the same AI plumbing for every project, developers can focus on building capabilities while QAlchemy handles:
+Developers focus on solving business problems while QAlchemy provides:
 
 - AI provider integration
-- Prompt management
-- Runtime configuration
-- Reporting
-- Workflow execution
+- Prompt construction
 - Configuration management
-
-The result is a clean, maintainable architecture that scales from simple prompt execution to sophisticated AI automation.
+- Runtime execution
+- Reporting
+- Logging infrastructure
+- Exception handling infrastructure
 
 ---
 
 # Quick Start
 
-```bash
-git clone https://github.com/<your-github-account>/qalchemy.git
+Clone the repository.
 
-cd qalchemy
+```bash
+git clone https://github.com/ausrgonzale/QAlchemy.git
+
+cd QAlchemy
 
 python -m venv .venv
 
@@ -80,67 +101,56 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Configure your preferred AI provider in:
+Configure your AI provider in:
 
 ```
-framework.yaml
+config/app.yaml
 ```
 
-Run one of the included capabilities:
+Generate source code:
 
 ```bash
-python scripts/generate_code.py
+python -m scripts.feature.generate_code \
+    --instructions "Create a production-ready TemperatureConverter class." \
+    --output src_ai/temperature_converter.py
 ```
 
-or
+Review source code:
 
 ```bash
-python scripts/review_code.py
+python -m scripts.feature.review_source_code \
+    src_ai/temperature_converter.py
 ```
 
 ---
 
 # Architecture
 
+```text
+          Application
+               │
+               ▼
+       Feature Entry Point
+               │
+               ▼
+      Feature Service
+               │
+      ┌────────┴─────────┐
+      ▼                  ▼
+Prompt Builder     Runtime Context
+      │                  │
+      ▼                  ▼
+Prompt Loader      Report Writer
+      │
+      ▼
+AI Client Builder
+      │
+      ▼
+AI Provider
+      │
+      ▼
+Generated Result
 ```
-                 User / CLI
-                      │
-                      ▼
-             AI Capability Service
-                      │
-           ┌──────────┴──────────┐
-           │                     │
-    Prompt Builder        Runtime Context
-           │                     │
-           ▼                     ▼
-    Prompt Loader          Report Writer
-           │                     │
-           └──────────┬──────────┘
-                      ▼
-              AI Client Builder
-                      │
-                      ▼
-                  AI Client
-                      │
-          Local / Cloud Provider
-                      │
-                      ▼
-               AI Generated Result
-```
-
----
-
-# Current Capabilities
-
-- AI-assisted code generation
-- AI-assisted code review
-- Prompt management
-- AI provider abstraction
-- Runtime execution context
-- Configuration-driven execution
-- Markdown report generation
-- Template-based output
-- External validation framework
 
 ---
 
@@ -149,7 +159,7 @@ python scripts/review_code.py
 | Category | Technology |
 |-----------|------------|
 | Language | Python 3.13 |
-| AI Providers | Ollama (Extensible) |
+| AI Providers | Ollama |
 | Configuration | YAML |
 | Testing | pytest |
 | Reporting | Markdown |
@@ -160,59 +170,80 @@ python scripts/review_code.py
 
 # Project Structure
 
-```
+```text
 qalchemy/
 │
 ├── clients/
-├── services/
+├── config/
 ├── prompts/
-├── templates/
+├── reports/
 ├── scripts/
+│   ├── core/
+│   └── feature/
+├── services/
+│   ├── core/
+│   └── feature/
+├── templates/
 ├── tests/
 ├── docs/
-├── framework.yaml
-├── reporting.py
-└── runtime_context.py
+└── README.md
 ```
+
+---
+
+# Project History
+
+## Version 1.0
+
+Version 1.0 established the core AI engineering framework, including:
+
+- AI Client abstraction
+- Prompt Builder
+- Prompt Loader
+- Runtime Context
+- Report Writer
+- Code Generation capability
+- Code Review capability
+- Configuration-driven architecture
+- Comprehensive automated testing
+
+## Version 1.1
+
+Version 1.1 focused on strengthening the framework's infrastructure and preparing QAlchemy for future capabilities.
+
+Major additions include:
+
+- AppConfigurationService
+- Logging Service
+- Exception Handling Service
+- AI Work Order–driven prompt construction
+- Enhanced execution pipeline
+- 110 automated unit tests
+
+The Logging and Exception Handling services are intentionally delivered as independent framework components in this release. Future releases will integrate these services throughout the execution pipeline while preserving the framework's separation of concerns.
 
 ---
 
 # Roadmap
 
-## Version 1.0
+Future releases will continue expanding the framework with additional AI engineering capabilities, including:
 
-- Configuration-driven framework
-- Prompt Builder
-- Prompt Loader
-- AI Client abstraction
-- Runtime Context
-- Report Writer
-- Code Generation capability
-- Code Review capability
-- External validation
-- Comprehensive unit testing
-- GitHub Actions CI
-
-## Future Enhancements
-
+- Interface adapters
+- Enhanced execution pipeline
 - Additional AI providers
-- Document review
-- Image analysis
-- Requirements analysis
+- Requirements evaluation
+- Document analysis
 - Test generation
 - Capability plug-in architecture
 - Workflow orchestration
-- RAG integration
-- Vector database support
-- Multi-language code generation
 
 ---
 
 # Contributing
 
-Contributions, feature requests, and suggestions are welcome.
+Contributions, suggestions, and feature requests are welcome.
 
-As QAlchemy evolves, the goal is to provide a flexible framework for building reusable AI-powered capabilities across multiple domains.
+QAlchemy is designed as a reusable AI engineering framework that continues to evolve through practical application and iterative improvement.
 
 ---
 

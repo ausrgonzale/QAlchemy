@@ -1,231 +1,376 @@
-########################################
-# Configuration
-########################################
+###############################################################################
+#
+# QAlchemy Exception Catalog
+#
+# File:
+#   config/exception_catalog.yaml
+#
+# Purpose:
+#   Centralized exception catalog for all QAlchemy Core Services,
+#   Feature Services, Support Scripts, and Infrastructure components.
+#
+# Startup Rules
+#   BootstrapService
+#       • verifies file exists
+#       • verifies file is readable
+#
+#   ExceptionCatalog
+#       • loads YAML
+#
+#   ExceptionHandlingService
+#       • validates schema
+#       • validates references
+#       • builds lookup indexes
+#       • formats exceptions
+#
+###############################################################################
 
-CFG001:
-  category: Configuration
-  severity: ERROR
-  title: Missing Configuration Property
-  message: "Required configuration property '{property}' was not found."
-  recommendation: Verify that the property is present in config/app.yaml.
+metadata:
+  framework: QAlchemy
+  framework_version: "1.1.0"
+  schema_version: "1.0"
+  catalog_version: "1.0"
+  description: "QAlchemy Exception Catalog"
 
-CFG002:
-  category: Configuration
-  severity: ERROR
-  title: Missing Configuration Section
-  message: "Required configuration section '{section}' was not found."
-  recommendation: Add the required section and its values to config/app.yaml.
+###############################################################################
+# VALID VALUES
+###############################################################################
 
-CFG003:
-  category: Configuration
-  severity: CRITICAL
-  title: Configuration File Not Found
-  message: "Configuration file was not found: '{path}'."
-  recommendation: Restore config/app.yaml and verify the application is running from a valid project checkout.
+origins:
+  - CoreService
+  - FeatureService
+  - SupportScript
+  - Infrastructure
 
-CFG004:
-  category: Configuration
-  severity: ERROR
-  title: Configuration File Read Failed
-  message: "Unable to read configuration file '{path}'."
-  recommendation: Verify the file exists, is readable, and is not blocked by filesystem permissions.
+severities:
+  - INFO
+  - WARNING
+  - ERROR
+  - CRITICAL
 
-CFG005:
-  category: Configuration
-  severity: ERROR
-  title: Configuration YAML Parse Failed
-  message: "Unable to parse YAML configuration file '{path}'."
-  recommendation: Correct the YAML syntax and validate the configuration file.
+categories:
+  - Configuration
+  - AI
+  - Prompt
+  - Template
+  - Validation
+  - Logging
+  - Filesystem
+  - Reporting
+  - Application
+  - Internal
+  - Network
+  - Security
 
-CFG006:
-  category: Configuration
-  severity: ERROR
-  title: Invalid Configuration Root
-  message: "Configuration file '{path}' must contain a top-level mapping."
-  recommendation: Ensure config/app.yaml contains a YAML mapping of application sections.
+###############################################################################
+# COMPONENT REGISTRY
+###############################################################################
 
-########################################
-# Logging
-########################################
+components:
 
-LOG001:
-  category: Logging
-  severity: ERROR
-  title: Log File Persistence Failed
-  message: "Unable to create or write log file '{path}'."
-  recommendation: Verify the log directory exists or can be created and that the application has write permission.
+  CoreService:
 
-########################################
-# Exception Framework
-########################################
+    AppConfigurationService:
+      status: active
 
-# Reserved for exception-framework failures. No ExceptionService or catalog
-# implementation currently exists in the application.
+    PromptLoaderService:
+      status: active
 
-########################################
-# Application
-########################################
+    PromptBuilderService:
+      status: active
 
-APP001:
-  category: Application
-  severity: ERROR
-  title: Source File Not Found
-  message: "Source file was not found: '{path}'."
-  recommendation: Provide an existing readable source file to the code-review command.
+    AIClientBuilderService:
+      status: active
 
-APP002:
-  category: Application
-  severity: ERROR
-  title: Generated Code Write Failed
-  message: "Unable to write generated code to '{path}'."
-  recommendation: Verify the destination directory exists or can be created and that it is writable.
+    SourceCodePreprocessingService:
+      status: active
 
-APP003:
-  category: Application
-  severity: ERROR
-  title: Code Generation Workflow Failed
-  message: "Code generation failed during the '{operation}' operation."
-  recommendation: Review the linked configuration, prompt, preprocessing, and AI provider errors before retrying.
+    LoggerService:
+      status: active
 
-APP004:
-  category: Application
-  severity: ERROR
-  title: Code Review Workflow Failed
-  message: "Code review failed during the '{operation}' operation."
-  recommendation: Review the linked configuration, prompt, report, and AI provider errors before retrying.
+    ExceptionHandlingService:
+      status: active
 
-APP005:
-  category: Application
-  severity: ERROR
-  title: Source Code Preprocessing Failed
-  message: "Unable to preprocess source code during the '{operation}' operation."
-  recommendation: Verify that the supplied source is valid Python and identify the preprocessing step that failed.
+  FeatureService:
 
-########################################
-# Validation
-########################################
+    CodeGenerationService:
+      status: active
 
-VAL001:
-  category: Validation
-  severity: CRITICAL
-  title: Repository Not Found
-  message: "Project repository was not found at '{path}'."
-  recommendation: Run the validator from an intact QAlchemy project checkout.
+    CodeReviewService:
+      status: active
 
-VAL002:
-  category: Validation
-  severity: CRITICAL
-  title: Virtual Environment Not Found
-  message: "Project virtual environment was not found at '{path}'."
-  recommendation: Create the project virtual environment and install its dependencies.
+    TestGenerationService:
+      status: planned
 
-VAL003:
-  category: Validation
-  severity: ERROR
-  title: Required Project Path Missing
-  message: "Required project path was not found: '{path}'."
-  recommendation: Restore the required project directory or update the validator's project structure requirements.
+    RequirementsEvaluationService:
+      status: planned
 
-VAL004:
-  category: Validation
-  severity: ERROR
-  title: Unit Test Validation Failed
-  message: "Unit tests failed during project validation."
-  recommendation: Run the unit tests directly, fix the reported failures, and rerun validation.
+  SupportScript:
 
-VAL005:
-  category: Validation
-  severity: ERROR
-  title: Project Validation Failed
-  message: "Project validation failed: '{reason}'."
-  recommendation: Review the validation output and resolve the underlying environment, configuration, structure, or test failure.
+    exception_catalog.py:
+      status: active
 
-########################################
-# AI Provider
-########################################
+    exception_models.py:
+      status: active
 
-AI001:
-  category: AI Provider
-  severity: ERROR
-  title: AI Provider Dependency Missing
-  message: "Required AI provider package '{package}' is not installed."
-  recommendation: Install the required provider dependency in the active project environment.
+    logger.py:
+      status: active
 
-AI002:
-  category: AI Provider
-  severity: ERROR
-  title: AI Client Construction Failed
-  message: "Unable to construct an AI client for provider '{provider}' and model '{model}'."
-  recommendation: Verify AI configuration, provider availability, installed dependencies, and client initialization settings.
+    logger_config.py:
+      status: active
 
-AI003:
-  category: AI Provider
-  severity: ERROR
-  title: AI Provider Request Failed
-  message: "AI provider request failed for provider '{provider}' and model '{model}'."
-  recommendation: Verify the provider service is running, the model is available, and the request can complete within the configured timeout.
+  Infrastructure:
 
-########################################
-# Prompt
-########################################
+    Filesystem:
+      status: active
 
-PRM001:
-  category: Prompt
-  severity: ERROR
-  title: Prompt Load Failed
-  message: "Unable to load prompt file '{path}'."
-  recommendation: Verify the configured prompts directory, prompt filename, file encoding, and read permissions.
+    AIProvider:
+      status: active
 
-PRM002:
-  category: Prompt
-  severity: ERROR
-  title: Prompt Assembly Failed
-  message: "Unable to assemble prompts for task prompt '{task_prompt}'."
-  recommendation: Verify the required standard and task prompt files are available and valid.
+    ReportWriter:
+      status: active
 
-########################################
-# Template
-########################################
+###############################################################################
+# ERROR PREFIX REGISTRY
+###############################################################################
 
-TMP001:
-  category: Template
-  severity: ERROR
-  title: Report Template Load Failed
-  message: "Unable to load report template '{path}'."
-  recommendation: Verify the configured templates directory, template filename, file encoding, and read permissions.
+prefixes:
 
-########################################
-# Reporting
-########################################
+  CFG:
+    owner: AppConfigurationService
 
-RPT001:
-  category: Reporting
-  severity: ERROR
-  title: Report Source File Missing
-  message: "Runtime context source_file has not been set."
-  recommendation: Set RuntimeContext.source_file before generating a default report destination.
+  PRM:
+    owner: PromptLoaderService
 
-RPT002:
-  category: Reporting
-  severity: ERROR
-  title: Report Write Failed
-  message: "Unable to create or write report '{path}'."
-  recommendation: Verify the report destination directory can be created and that it is writable.
+  AI:
+    owner: AIClientBuilderService
 
-########################################
-# System
-########################################
+  PRE:
+    owner: SourceCodePreprocessingService
 
-SYS001:
-  category: System
-  severity: ERROR
-  title: Command Execution Failed
-  message: "Command failed with exit code '{exit_code}': '{command}'."
-  recommendation: Review the command output, resolve its failure, and rerun the operation.
+  GEN:
+    owner: CodeGenerationService
 
-SYS002:
-  category: System
-  severity: ERROR
-  title: Expected Artifact Missing
-  message: "Expected artifact was not created: '{path}'."
-  recommendation: Verify the preceding operation completed successfully and that its output path is correct.
+  REV:
+    owner: CodeReviewService
+
+  LOG:
+    owner: LoggerService
+
+  RPT:
+    owner: ReportWriter
+
+  VAL:
+    owner: ExceptionHandlingService
+
+  FS:
+    owner: Filesystem
+
+  QAL:
+    owner: ExceptionHandlingService
+
+###############################################################################
+# ERROR DEFINITIONS
+###############################################################################
+
+errors:
+
+  CFG001:
+    origin: CoreService
+    owner: AppConfigurationService
+    category: Configuration
+    severity: CRITICAL
+    recoverable: false
+    message: "Application configuration file '{file}' could not be found."
+    user_message: "Application configuration is missing."
+    resolution: "Verify the configured application file exists."
+
+  CFG002:
+    origin: CoreService
+    owner: AppConfigurationService
+    category: Configuration
+    severity: CRITICAL
+    recoverable: false
+    message: "Application configuration file is invalid."
+    user_message: "Application configuration is invalid."
+    resolution: "Correct the YAML syntax."
+
+  CFG003:
+    origin: CoreService
+    owner: AppConfigurationService
+    category: Configuration
+    severity: ERROR
+    recoverable: false
+    message: "Required configuration property '{property}' is missing."
+    user_message: "Required configuration is missing."
+    resolution: "Add the missing property."
+
+  PRM001:
+    origin: CoreService
+    owner: PromptLoaderService
+    category: Prompt
+    severity: ERROR
+    recoverable: false
+    message: "Prompt '{prompt}' could not be loaded."
+    user_message: "Required prompt could not be loaded."
+    resolution: "Verify the prompt file exists."
+
+  PRM002:
+    origin: CoreService
+    owner: PromptLoaderService
+    category: Prompt
+    severity: ERROR
+    recoverable: false
+    message: "Prompt directory '{directory}' does not exist."
+    user_message: "Prompt resources are unavailable."
+    resolution: "Verify the configured prompt directory."
+
+  PRM003:
+    origin: CoreService
+    owner: PromptBuilderService
+    category: Prompt
+    severity: ERROR
+    recoverable: true
+    message: "Required prompt variable '{variable}' is missing."
+    user_message: "Prompt generation failed."
+    resolution: "Supply the required prompt variables."
+
+  AI001:
+    origin: CoreService
+    owner: AIClientBuilderService
+    category: AI
+    severity: ERROR
+    recoverable: false
+    message: "Unsupported AI provider '{provider}'."
+    user_message: "Unsupported AI provider."
+    resolution: "Verify the provider configuration."
+
+  AI002:
+    origin: Infrastructure
+    owner: AIProvider
+    category: AI
+    severity: ERROR
+    recoverable: true
+    message: "AI request timed out."
+    user_message: "The AI provider timed out."
+    resolution: "Retry the request."
+
+  AI003:
+    origin: Infrastructure
+    owner: AIProvider
+    category: AI
+    severity: ERROR
+    recoverable: true
+    message: "AI provider returned an unexpected response."
+    user_message: "The AI provider returned an invalid response."
+    resolution: "Review provider connectivity."
+
+  PRE001:
+    origin: CoreService
+    owner: SourceCodePreprocessingService
+    category: Validation
+    severity: ERROR
+    recoverable: true
+    message: "Source code preprocessing failed."
+    user_message: "Unable to preprocess the source code."
+    resolution: "Verify the source file."
+
+  GEN001:
+    origin: FeatureService
+    owner: CodeGenerationService
+    category: Application
+    severity: ERROR
+    recoverable: false
+    message: "Code generation failed."
+    user_message: "Unable to generate code."
+    resolution: "Review AI configuration and prompts."
+
+  REV001:
+    origin: FeatureService
+    owner: CodeReviewService
+    category: Application
+    severity: ERROR
+    recoverable: false
+    message: "Code review failed."
+    user_message: "Unable to review the supplied source code."
+    resolution: "Verify the source file and AI provider."
+
+  LOG001:
+    origin: CoreService
+    owner: LoggerService
+    category: Logging
+    severity: ERROR
+    recoverable: true
+    message: "Unable to write log entry."
+    user_message: "Logging is temporarily unavailable."
+    resolution: "Verify log directory permissions."
+
+  RPT001:
+    origin: Infrastructure
+    owner: ReportWriter
+    category: Reporting
+    severity: ERROR
+    recoverable: true
+    message: "Unable to write report '{file}'."
+    user_message: "Report generation failed."
+    resolution: "Verify report output location."
+
+  FS001:
+    origin: Infrastructure
+    owner: Filesystem
+    category: Filesystem
+    severity: ERROR
+    recoverable: true
+    message: "File '{file}' could not be accessed."
+    user_message: "Unable to access the requested file."
+    resolution: "Verify the file path and permissions."
+
+  VAL001:
+    origin: CoreService
+    owner: ExceptionHandlingService
+    category: Validation
+    severity: ERROR
+    recoverable: false
+    message: "Exception catalog validation failed."
+    user_message: "Internal configuration validation failed."
+    resolution: "Review the validation errors."
+
+  QAL001:
+    origin: CoreService
+    owner: ExceptionHandlingService
+    category: Internal
+    severity: CRITICAL
+    recoverable: false
+    message: "Unhandled framework exception."
+    user_message: "An unexpected application error occurred."
+    resolution: "Review application logs."
+
+  QAL002:
+    origin: CoreService
+    owner: ExceptionHandlingService
+    category: Internal
+    severity: ERROR
+    recoverable: true
+    message: "Unknown exception code '{code}'."
+    user_message: "Unexpected application error."
+    resolution: "Verify the exception catalog."
+
+  QAL003:
+    origin: CoreService
+    owner: ExceptionHandlingService
+    category: Internal
+    severity: CRITICAL
+    recoverable: false
+    message: "Exception catalog could not be loaded."
+    user_message: "Application initialization failed."
+    resolution: "Verify the exception catalog exists and is readable."
+
+  QAL004:
+    origin: CoreService
+    owner: ExceptionHandlingService
+    category: Internal
+    severity: CRITICAL
+    recoverable: false
+    message: "Exception catalog validation failed."
+    user_message: "Application initialization failed."
+    resolution: "Correct the catalog validation errors."

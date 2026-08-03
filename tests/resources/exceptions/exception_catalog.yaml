@@ -1,0 +1,68 @@
+# =============================================================================
+# QAlchemy Unit Test Exception Catalog
+#
+# Purpose:
+#   Shared exception catalog used by unit tests.
+#
+# Notes:
+#   • Keep intentionally small.
+#   • Only include entries required by unit tests.
+#   • Mirror the production catalog structure.
+# =============================================================================
+
+metadata:
+  framework: QAlchemy
+  version: "1.0"
+  description: Unit Test Exception Catalog
+
+origins:
+  - Framework
+
+severities:
+  - ERROR
+
+categories:
+  - Configuration
+  - Validation
+
+components:
+  Configuration:
+    description: Configuration Services
+
+  PromptBuilderService:
+    description: Prompt generation services
+
+prefixes:
+  CFG:
+    component: Configuration
+    description: Configuration Exceptions
+
+  VAL:
+    component: PromptBuilderService
+    description: Validation Exceptions
+
+errors:
+
+  CFG001:
+    component: Configuration
+    severity: ERROR
+    recoverable: true
+
+    message: Configuration file not found.
+    user_message: Unable to load the application configuration.
+    recommendation: Verify the configuration file exists and is valid.
+
+    category: Configuration
+    documentation: docs/errors/CFG001.md
+
+  VAL-0001:
+    component: PromptBuilderService
+    severity: ERROR
+    recoverable: false
+
+    message: Engineering Work Order missing required field(s).
+    user_message: Invalid Engineering Work Order.
+    recommendation: Populate all required fields.
+
+    category: Validation
+    documentation: docs/errors/VAL-0001.md

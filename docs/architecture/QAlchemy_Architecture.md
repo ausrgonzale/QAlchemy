@@ -2,390 +2,331 @@
 
 # QAlchemy Architecture
 
-**Status:** Active  
-**Audience:** Architects, Engineers, Contributors  
-**Last Updated:** July 2026
+---
+
+# Purpose
+
+Provide a high-level architectural view of the QAlchemy application.
+
+This document describes the application's organization, runtime architecture, startup lifecycle, and major architectural components.
+
+Implementation details and architectural rationale are documented in **Architecture_Design.md**.
 
 ---
 
-# 1. Purpose
+# Overall Architecture
 
-This document describes the overall architecture of the QAlchemy application.
+```mermaid
+flowchart TD
 
-It defines the major architectural components, their responsibilities, and how they interact. It intentionally avoids implementation details, algorithms, and coding standards. Those are documented in the Design Specifications.
+    Host["Host Applications<br/>Scripts • Tests • CLI • REST • MCP"]
 
-This document answers the question:
+    Bootstrap["ApplicationBootstrapService<br/><i>Composition Root</i>"]
 
-> **What is QAlchemy and how is it organized?**
+    Feature["Feature Services"]
 
----
+    Core["Core Services"]
 
-# 2. Architectural Principles
+    Infrastructure["Infrastructure"]
 
-QAlchemy is designed around a small set of engineering principles.
-
-## Separation of Concerns
-
-Each component has a single well-defined responsibility.
-
-Business logic, AI interaction, configuration, logging, reporting, and exception handling remain independent services.
-
----
-
-## Service-Oriented Architecture
-
-Application functionality is implemented through reusable services.
-
-Services communicate through well-defined interfaces and remain loosely coupled.
-
----
-
-## Configuration Driven
-
-Application behavior is controlled through configuration rather than hard-coded values.
-
-No component should depend on implementation-specific paths, filenames, models, or providers.
-
----
-
-## AI Provider Independence
-
-AI functionality is accessed through a common abstraction.
-
-Application features never communicate directly with a specific AI provider.
-
----
-
-## Testability
-
-Every service is designed to support automated unit testing and feature validation.
-
----
-
-## Extensibility
-
-New AI providers, services, prompts, and engineering capabilities can be added with minimal impact to existing components.
-
----
-
-# 3. Architectural Overview
-
-```
-                    +----------------------+
-                    |      CLI Scripts     |
-                    +----------+-----------+
-                               |
-                               v
-                    +----------------------+
-                    |  Feature Services    |
-                    +----------+-----------+
-                               |
-             +-----------------+------------------+
-             |                 |                  |
-             v                 v                  v
-     Configuration       Prompt Builder     Reporting
-             |                 |                  |
-             +-----------------+------------------+
-                               |
-                               v
-                     AI Client Builder
-                               |
-                               v
-                       AI Provider Layer
+    Host --> Bootstrap
+    Bootstrap --> Feature
+    Feature --> Core
+    Core --> Infrastructure
 ```
 
-Cross-cutting services:
-
-```
-Logging Service
-Exception Handling Service
-```
-
-These services are available throughout the application.
-
 ---
 
-# 4. High-Level Components
-
-## CLI Scripts
-
-Scripts provide the user-facing entry points into QAlchemy.
-
-Examples include:
-
-- Code Generation
-- Code Review
-- Validation
-- Demonstrations
-
-Scripts contain minimal business logic and delegate work to services.
-
----
-
-## Feature Services
-
-Feature Services implement the primary capabilities of the application.
-
-Current services include:
-
-- CodeGenerationService
-- CodeReviewService
-
-Future services may include:
-
-- RequirementsService
-- DocumentationService
-- WorkflowService
-
----
-
-## Core Services
-
-Core services provide reusable infrastructure shared across the application.
-
-Current core services include:
-
-- AppConfigurationService
-- PromptBuilderService
-- PromptLoaderService
-- AIClientBuilderService
-- LoggerService
-- ExceptionHandlingService
-- ReportWriter
-
----
-
-## AI Provider Layer
-
-The AI Provider Layer isolates the application from specific AI vendors.
-
-Current implementations include:
-
-- Ollama
-
-Future providers may include:
-
-- OpenAI
-- Azure OpenAI
-- Anthropic
-- Google Gemini
-- Local LLMs
-- MCP-enabled providers
-
----
-
-# 5. Cross-Cutting Services
-
-Certain services are available to every subsystem.
-
----
-
-## Configuration
-
-Provides centralized application configuration.
-
-Responsibilities include:
-
-- Reading configuration
-- Validation
-- Strongly typed configuration objects
-- Runtime configuration access
-
----
-
-## Logging
-
-Provides centralized logging throughout the application.
-
-Responsibilities include:
-
-- Structured logging
-- Configurable output
-- Standard formatting
-- Future observability integration
-
----
-
-## Exception Handling
-
-Provides consistent application error handling.
-
-Responsibilities include:
-
-- Standard exception catalog
-- Error message formatting
-- Logging integration
-- Standardized exception codes
-
----
-
-## Reporting
-
-Responsible for producing user-facing reports.
-
-Examples include:
-
-- Code Review Reports
-- Validation Reports
-- Future Analysis Reports
-
----
-
-# 6. Runtime Flow
-
-A typical execution follows this sequence.
-
-```
-User
-
-  |
-
-CLI Script
-
-  |
-
-Feature Service
-
-  |
-
-Prompt Builder
-
-  |
-
-AI Client Builder
-
-  |
-
-AI Provider
-
-  |
-
-Response
-
-  |
-
-Report Writer
-
-  |
-
-Output
+# Package Organization
+
+```mermaid
+flowchart TB
+
+    Root["QAlchemy"]
+
+    Root --> Services
+    Root --> Scripts
+    Root --> Config
+    Root --> Prompts
+    Root --> Templates
+    Root --> Reports
+    Root --> Tests
+    Root --> Docs
+
+    Services --> Application
+    Services --> Core
+    Services --> Feature
+
+    Application --> Bootstrap["ApplicationBootstrapService"]
+
+    Core --> Configuration["AppConfigurationService"]
+    Core --> PromptLoader["PromptLoaderService"]
+    Core --> PromptBuilder["PromptBuilderService"]
+    Core --> Logger["LoggerService"]
+    Core --> Exception["ExceptionService"]
+    Core --> AIBuilder["AIClientBuilderService"]
+    Core --> Preprocessor["SourceCodePreprocessingService"]
+
+    Feature --> Generator["CodeGenerationService"]
+    Feature --> Reviewer["CodeReviewService"]
 ```
 
-During execution:
-
-- Configuration is available globally.
-- Logging records application activity.
-- Exception Handling manages failures.
-
 ---
 
-# 7. Layered Architecture
+# Layered Architecture
 
-```
-+------------------------------------+
-|          User Interface            |
-|         (CLI / Validation)         |
-+------------------------------------+
+```mermaid
+flowchart TD
 
-+------------------------------------+
-|         Feature Services           |
-+------------------------------------+
+    Host["Host Layer"]
 
-+------------------------------------+
-|          Core Services             |
-+------------------------------------+
+    Application["Application Layer"]
 
-+------------------------------------+
-|        AI Provider Layer           |
-+------------------------------------+
+    Feature["Feature Layer"]
 
-+------------------------------------+
-|      External AI Providers         |
-+------------------------------------+
+    Core["Core Layer"]
+
+    Infrastructure["Infrastructure Layer"]
+
+    Host --> Application
+    Application --> Feature
+    Feature --> Core
+    Core --> Infrastructure
 ```
 
-Dependencies always flow downward.
+---
 
-Lower layers never depend upon higher layers.
+# Application Startup Lifecycle
+
+```mermaid
+sequenceDiagram
+
+    participant Host
+    participant Bootstrap
+    participant Generation
+    participant Review
+
+    Host->>Bootstrap: bootstrap()
+
+    Bootstrap->>Bootstrap: Validate Startup
+
+    Bootstrap->>Bootstrap: Instantiate Feature Services
+
+    Bootstrap-->>Host: Initialized ApplicationBootstrapService
+
+    Host->>Generation: generate()
+
+    Host->>Review: review()
+```
 
 ---
 
-# 8. Current Feature Set
+# Application Bootstrap
 
-Version 1.1 provides the following user-facing capabilities.
+```mermaid
+flowchart LR
 
-### Code Generation
+    Start([Application Start])
 
-Generate source code using configurable AI providers.
+    Config["Load Configuration"]
 
----
+    Validation["Validate Configuration"]
 
-### Code Review
+    Services["Instantiate Feature Services"]
 
-Perform automated source code reviews.
+    Ready([Application Ready])
 
----
-
-### Validation
-
-Execute feature validation scripts.
-
----
-
-### Reporting
-
-Generate Markdown reports.
+    Start --> Config
+    Config --> Validation
+    Validation --> Services
+    Services --> Ready
+```
 
 ---
 
-# 9. Planned Evolution
+# Runtime Architecture
 
-The architecture is intentionally designed to support future capabilities without requiring structural redesign.
+```mermaid
+flowchart LR
 
-Planned additions include:
+    Bootstrap["ApplicationBootstrapService"]
 
-- Requirements Management
-- Documentation Generation
-- REST API
-- MCP Integration
-- Multi-Agent Workflows
-- IDE Integration
-- SaaS Deployment
+    Generation["CodeGenerationService"]
 
-These capabilities will extend the existing architecture rather than replace it.
+    Review["CodeReviewService"]
 
----
+    Core["Core Services"]
 
-# 10. Architectural Boundaries
+    Bootstrap --> Generation
+    Bootstrap --> Review
 
-The architecture document intentionally excludes implementation details.
-
-The following topics are documented separately:
-
-- Engineering standards
-- Coding standards
-- Design specifications
-- Prompt and instruction assets
-- Testing standards
-- Feature validation
+    Generation --> Core
+    Review --> Core
+```
 
 ---
 
-# 11. Related Documentation
+# Core Services
 
-| Document | Purpose |
-|----------|---------|
-| QAlchemy_Design.md | Application engineering design and subsystem overview |
-| QAlchemy_Exception_Handling_Design.md | Detailed exception handling design |
-| Engineering Standards | Engineering policies and development practices |
-| Testing Standards | Unit and feature validation requirements |
+```mermaid
+flowchart TB
+
+    Core["Core Services"]
+
+    Core --> Configuration["AppConfigurationService"]
+
+    Core --> PromptLoader["PromptLoaderService"]
+
+    Core --> PromptBuilder["PromptBuilderService"]
+
+    Core --> AIBuilder["AIClientBuilderService"]
+
+    Core --> Logger["LoggerService"]
+
+    Core --> Exception["ExceptionService"]
+
+    Core --> Preprocessor["SourceCodePreprocessingService"]
+```
 
 ---
 
-# 12. Summary
+# Feature Services
 
-QAlchemy is a modular, service-oriented AI engineering application designed to produce maintainable, testable, and extensible AI-powered software solutions.
+```mermaid
+flowchart TB
 
-Its architecture separates application features from infrastructure concerns while maintaining clear boundaries between configuration, AI interaction, logging, exception handling, reporting, and future expansion.
+    Features["Feature Services"]
 
-The architecture is intentionally stable so that future capabilities can be introduced by extending existing services rather than redesigning the application.
+    Features --> Generation["CodeGenerationService"]
+
+    Features --> Review["CodeReviewService"]
+```
+
+---
+
+# Dependency Direction
+
+```mermaid
+flowchart TD
+
+    Host
+
+    Application
+
+    Feature
+
+    Core
+
+    Infrastructure
+
+    Host --> Application
+
+    Application --> Feature
+
+    Feature --> Core
+
+    Core --> Infrastructure
+```
+
+---
+
+# Dependency Rules
+
+| Allowed               | Not Allowed              |
+| --------------------- | ------------------------ |
+| Host → Application    | Feature → Application    |
+| Application → Feature | Core → Application       |
+| Feature → Core        | Core → Feature           |
+| Core → Infrastructure | Infrastructure → Feature |
+
+---
+
+# Current Application Host
+
+```mermaid
+flowchart LR
+
+    Test["test_e2e_qalchemy.py"]
+
+    Bootstrap["ApplicationBootstrapService"]
+
+    Generation["CodeGenerationService"]
+
+    Review["CodeReviewService"]
+
+    Test --> Bootstrap
+
+    Bootstrap --> Generation
+
+    Bootstrap --> Review
+```
+
+---
+
+# Future Host Applications
+
+```mermaid
+flowchart TB
+
+    Bootstrap["ApplicationBootstrapService"]
+
+    Bootstrap --> E2E["test_e2e_qalchemy.py"]
+
+    Bootstrap --> Generate["generate_code.py"]
+
+    Bootstrap --> Review["review_source_code.py"]
+
+    Bootstrap --> Demo["demo.py"]
+
+    Bootstrap --> CLI["CLI Host"]
+
+    Bootstrap --> REST["REST Host"]
+
+    Bootstrap --> MCP["MCP Host"]
+```
+
+---
+
+# Architecture Evolution
+
+```mermaid
+flowchart LR
+
+    V11["v1.1<br/>Bootstrap Service<br/>Used by E2E"]
+
+    V12["v1.2<br/>Helper Scripts<br/>Use Bootstrap"]
+
+    Future["Future<br/>CLI • REST • MCP • Plugins"]
+
+    V11 --> V12
+
+    V12 --> Future
+```
+
+---
+
+# Architectural Principles
+
+```mermaid
+mindmap
+  root((QAlchemy))
+    Layered Architecture
+    Service-Oriented Design
+    Composition Root
+    Separation of Concerns
+    Configuration Driven
+    Low Coupling
+    High Cohesion
+    Thin Host Applications
+    Reusable Core Services
+```
+
+---
+
+# Related Documents
+
+* Architecture_Design.md
+* ApplicationBootstrapService Blueprint
+* Service Blueprints
+* Design Specifications
+* README.md
