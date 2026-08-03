@@ -97,3 +97,6 @@ metrics/
 # -----------------------------------------------------------------------------
 
 .cache/
+
+# Working prototypes and experimental code
+working/
