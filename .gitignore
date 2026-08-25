@@ -63,33 +63,53 @@ htmlcov/
 *.log
 
 # -----------------------------------------------------------------------------
-# AI Framework
+# QAlchemy Runtime Storage
 # -----------------------------------------------------------------------------
 
-# Working documentation
+# Work Order persistent storage
+work_orders/
 
-# =============================================================================
+# WorkSpace runtime storage
+work_space/
+
+# -----------------------------------------------------------------------------
+# Configuration Backups
+# -----------------------------------------------------------------------------
+
+*.orig
+
+# -----------------------------------------------------------------------------
 # Internal Documentation
-#
+# -----------------------------------------------------------------------------
+
 # These documents are maintained for internal engineering, AI-assisted
 # development, and product planning. They are intentionally excluded from the
 # Community Edition distribution.
-# =============================================================================
+
 docs/design/
 docs/engineering/
 docs/instructions/
 
-# Generated reports
+# -----------------------------------------------------------------------------
+# Generated Reports
+# -----------------------------------------------------------------------------
+
 reports/
 
-# Demo generated artifacts
+# -----------------------------------------------------------------------------
+# Demo Generated Artifacts
+# -----------------------------------------------------------------------------
+
 demo/output/*
 !demo/output/.gitkeep
 
 demo/sample_code/*
 !demo/sample_code/.gitkeep
 
-# Future AI artifacts
+# -----------------------------------------------------------------------------
+# Future AI Artifacts
+# -----------------------------------------------------------------------------
+
 metrics/
 
 # -----------------------------------------------------------------------------

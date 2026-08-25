@@ -1,332 +1,210 @@
-# Version >= 1.1
+# QAlchemy Architecture (v1.2)
 
-# QAlchemy Architecture
+## Mission
 
----
+QAlchemy is an AI Engineering Framework built around a single architectural principle:
 
-# Purpose
+> **Engineering work should flow through the system as a structured Work Order rather than as loosely coupled prompts or service-specific requests.**
 
-Provide a high-level architectural view of the QAlchemy application.
-
-This document describes the application's organization, runtime architecture, startup lifecycle, and major architectural components.
-
-Implementation details and architectural rationale are documented in **Architecture_Design.md**.
+The Work Order represents the canonical engineering contract exchanged between services. Every component exists to create, enrich, transport, execute, or observe that Work Order.
 
 ---
 
-# Overall Architecture
+## Prime Objectives
 
-```mermaid
-flowchart TD
-
-    Host["Host Applications<br/>Scripts • Tests • CLI • REST • MCP"]
-
-    Bootstrap["ApplicationBootstrapService<br/><i>Composition Root</i>"]
-
-    Feature["Feature Services"]
-
-    Core["Core Services"]
-
-    Infrastructure["Infrastructure"]
-
-    Host --> Bootstrap
-    Bootstrap --> Feature
-    Feature --> Core
-    Core --> Infrastructure
-```
+1. **Work Order First** — Every engineering activity is represented by a Work Order.
+2. **Single Engineering Contract** — Services exchange Work Orders, not prompts.
+3. **Separation of Responsibilities** — Each service owns one responsibility.
+4. **Composable Engineering** — Work Orders expand and contract without breaking consumers.
+5. **Framework Before Features** — Infrastructure exists only to support the Engineering Flow.
 
 ---
 
-# Package Organization
-
-```mermaid
-flowchart TB
-
-    Root["QAlchemy"]
-
-    Root --> Services
-    Root --> Scripts
-    Root --> Config
-    Root --> Prompts
-    Root --> Templates
-    Root --> Reports
-    Root --> Tests
-    Root --> Docs
-
-    Services --> Application
-    Services --> Core
-    Services --> Feature
-
-    Application --> Bootstrap["ApplicationBootstrapService"]
-
-    Core --> Configuration["AppConfigurationService"]
-    Core --> PromptLoader["PromptLoaderService"]
-    Core --> PromptBuilder["PromptBuilderService"]
-    Core --> Logger["LoggerService"]
-    Core --> Exception["ExceptionService"]
-    Core --> AIBuilder["AIClientBuilderService"]
-    Core --> Preprocessor["SourceCodePreprocessingService"]
-
-    Feature --> Generator["CodeGenerationService"]
-    Feature --> Reviewer["CodeReviewService"]
-```
-
----
-
-# Layered Architecture
-
-```mermaid
-flowchart TD
-
-    Host["Host Layer"]
-
-    Application["Application Layer"]
-
-    Feature["Feature Layer"]
-
-    Core["Core Layer"]
-
-    Infrastructure["Infrastructure Layer"]
-
-    Host --> Application
-    Application --> Feature
-    Feature --> Core
-    Core --> Infrastructure
-```
-
----
-
-# Application Startup Lifecycle
-
-```mermaid
-sequenceDiagram
-
-    participant Host
-    participant Bootstrap
-    participant Generation
-    participant Review
-
-    Host->>Bootstrap: bootstrap()
-
-    Bootstrap->>Bootstrap: Validate Startup
-
-    Bootstrap->>Bootstrap: Instantiate Feature Services
-
-    Bootstrap-->>Host: Initialized ApplicationBootstrapService
-
-    Host->>Generation: generate()
-
-    Host->>Review: review()
-```
-
----
-
-# Application Bootstrap
+## Engineering Flow
 
 ```mermaid
 flowchart LR
+    USER([Engineering Request])
+    ARGS["Runtime Arguments"]
+    ORCH["Orchestration Service"]
+    PB["PromptBuilder Service"]
+    WO{{WORK ORDER}}
+    FEATURE["Feature Service\n(CodeGeneration / CodeReview / Future...)"]
+    AI["AI Client"]
+    RESULT([Engineering Deliverable])
 
-    Start([Application Start])
-
-    Config["Load Configuration"]
-
-    Validation["Validate Configuration"]
-
-    Services["Instantiate Feature Services"]
-
-    Ready([Application Ready])
-
-    Start --> Config
-    Config --> Validation
-    Validation --> Services
-    Services --> Ready
+    USER --> ARGS
+    ARGS --> ORCH
+    ORCH --> PB
+    PB --> WO
+    WO -. Returns .-> ORCH
+    ORCH --> FEATURE
+    WO -. Executes .-> FEATURE
+    FEATURE --> AI
+    AI --> RESULT
 ```
 
 ---
 
-# Runtime Architecture
+## Prime Directive
+
+> **Everything in QAlchemy exists to create, enrich, transport, execute, or observe a Work Order.**
+
+Every design decision should answer:
+
+> **Does this improve the Engineering Flow?**
+
+| Score | Meaning |
+|--------|---------|
+| +1 | Directly improves the Engineering Flow |
+| 0 | Required infrastructure supporting the flow |
+| -1 | Adds complexity without improving the flow |
+
+---
+
+## Work Order Lifecycle
 
 ```mermaid
 flowchart LR
+    TEMPLATE["Work Order Template\n(work_order.yaml)"]
+    INPUT["Runtime Arguments"]
+    PB["PromptBuilder Service"]
+    WO{{Runtime Work Order}}
+    ORCH["Orchestration Service"]
+    FEATURE["Feature Service"]
 
-    Bootstrap["ApplicationBootstrapService"]
-
-    Generation["CodeGenerationService"]
-
-    Review["CodeReviewService"]
-
-    Core["Core Services"]
-
-    Bootstrap --> Generation
-    Bootstrap --> Review
-
-    Generation --> Core
-    Review --> Core
+    TEMPLATE --> PB
+    INPUT --> PB
+    PB --> WO
+    WO --> ORCH
+    ORCH --> FEATURE
 ```
 
 ---
 
-# Core Services
+## Runtime Request
 
-```mermaid
-flowchart TB
+The Runtime Request represents engineering intent before a Work Order exists.
 
-    Core["Core Services"]
+Typical runtime arguments include:
 
-    Core --> Configuration["AppConfigurationService"]
+- target
+- requirements
+- source_code
+- language
+- model_override
+- context
+- future runtime options
 
-    Core --> PromptLoader["PromptLoaderService"]
-
-    Core --> PromptBuilder["PromptBuilderService"]
-
-    Core --> AIBuilder["AIClientBuilderService"]
-
-    Core --> Logger["LoggerService"]
-
-    Core --> Exception["ExceptionService"]
-
-    Core --> Preprocessor["SourceCodePreprocessingService"]
-```
+The Runtime Request is transient. The Work Order is the canonical engineering contract exchanged between services.
 
 ---
 
-# Feature Services
+## Work Order Philosophy
 
-```mermaid
-flowchart TB
+The Work Order is:
 
-    Features["Feature Services"]
+- Not configuration.
+- Not simply a YAML file.
+- Not just a prompt.
+- The executable engineering contract exchanged between services.
 
-    Features --> Generation["CodeGenerationService"]
+Typical sections include:
 
-    Features --> Review["CodeReviewService"]
-```
-
----
-
-# Dependency Direction
-
-```mermaid
-flowchart TD
-
-    Host
-
-    Application
-
-    Feature
-
-    Core
-
-    Infrastructure
-
-    Host --> Application
-
-    Application --> Feature
-
-    Feature --> Core
-
-    Core --> Infrastructure
-```
+| Category | Purpose |
+|----------|---------|
+| Metadata | Routing and identity |
+| Target | Intended Feature Service |
+| System Prompt | AI behavior |
+| Objective | Engineering objective |
+| User Instructions | Runtime instructions |
+| Context | Additional context |
+| Artifacts | Standards and references |
+| Constraints | Execution policies |
+| Response Contract | Expected deliverable |
+| Execution Options | Runtime behavior |
 
 ---
 
-# Dependency Rules
+## Required vs Optional Fields
 
-| Allowed               | Not Allowed              |
-| --------------------- | ------------------------ |
-| Host → Application    | Feature → Application    |
-| Application → Feature | Core → Application       |
-| Feature → Core        | Core → Feature           |
-| Core → Infrastructure | Infrastructure → Feature |
+Required fields define the minimum executable contract.
 
----
+Optional fields allow the Work Order to evolve without requiring Feature Service changes.
 
-# Current Application Host
+Consumers must:
 
-```mermaid
-flowchart LR
-
-    Test["test_e2e_qalchemy.py"]
-
-    Bootstrap["ApplicationBootstrapService"]
-
-    Generation["CodeGenerationService"]
-
-    Review["CodeReviewService"]
-
-    Test --> Bootstrap
-
-    Bootstrap --> Generation
-
-    Bootstrap --> Review
-```
+- Consume required fields.
+- Gracefully handle missing optional fields.
+- Ignore unknown future fields.
+- Never assume optional fields exist.
 
 ---
 
-# Future Host Applications
+## Service Responsibilities
 
-```mermaid
-flowchart TB
-
-    Bootstrap["ApplicationBootstrapService"]
-
-    Bootstrap --> E2E["test_e2e_qalchemy.py"]
-
-    Bootstrap --> Generate["generate_code.py"]
-
-    Bootstrap --> Review["review_source_code.py"]
-
-    Bootstrap --> Demo["demo.py"]
-
-    Bootstrap --> CLI["CLI Host"]
-
-    Bootstrap --> REST["REST Host"]
-
-    Bootstrap --> MCP["MCP Host"]
-```
+| Service | Responsibility |
+|----------|----------------|
+| ApplicationBootstrapService | Construct the application |
+| AppConfigurationService | Configure application behavior |
+| OrchestrationService | Route engineering work |
+| PromptBuilderService | Build executable Work Orders |
+| Feature Services | Execute Work Orders |
+| AI Client | Deliver Work Orders to the AI provider |
+| LoggerService | Observe the Engineering Flow |
+| ExceptionHandlingService | Protect the Engineering Flow |
 
 ---
 
-# Architecture Evolution
+## Architectural Boundaries
 
-```mermaid
-flowchart LR
+### OrchestrationService
 
-    V11["v1.1<br/>Bootstrap Service<br/>Used by E2E"]
+- Receives runtime requests.
+- Selects the engineering workflow.
+- Invokes PromptBuilderService.
+- Receives the completed Work Order.
+- Dispatches the Work Order to the correct Feature Service.
 
-    V12["v1.2<br/>Helper Scripts<br/>Use Bootstrap"]
+### PromptBuilderService
 
-    Future["Future<br/>CLI • REST • MCP • Plugins"]
+- Loads the Work Order template.
+- Merges runtime arguments.
+- Resolves engineering artifacts.
+- Validates the engineering contract.
+- Produces the executable Runtime Work Order.
 
-    V11 --> V12
+### Feature Services
 
-    V12 --> Future
-```
-
----
-
-# Architectural Principles
-
-```mermaid
-mindmap
-  root((QAlchemy))
-    Layered Architecture
-    Service-Oriented Design
-    Composition Root
-    Separation of Concerns
-    Configuration Driven
-    Low Coupling
-    High Cohesion
-    Thin Host Applications
-    Reusable Core Services
-```
+- Consume Work Orders.
+- Never interpret YAML.
+- Never build or modify Work Orders.
+- Execute engineering work.
 
 ---
 
-# Related Documents
+## Future Growth
 
-* Architecture_Design.md
-* ApplicationBootstrapService Blueprint
-* Service Blueprints
-* Design Specifications
-* README.md
+All future capabilities should consume the same Work Order contract:
+
+- Documentation Generation
+- Test Generation
+- Requirements Evaluation
+- Architecture Review
+- Security Review
+
+---
+
+## Architecture Decision Rule
+
+Every proposal begins with one question:
+
+> **Does this improve the Engineering Flow?**
+
+If yes, classify it as **+1** or **0**.
+
+If not, it is **-1** and should not become part of the core architecture.
+
+---
+
+> **QAlchemy is not a collection of AI services. It is an engineering workflow built around a single canonical Work Order that represents engineering intent from request to deliverable.**

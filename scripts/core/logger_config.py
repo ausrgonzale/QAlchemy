@@ -7,7 +7,7 @@ configuration that can be consumed by Logger.
 
 from pathlib import Path
 
-from services.core.app_configuration_service import LoggingConfiguration
+from services.app.app_configuration_service import LoggingConfiguration
 
 
 class LoggerConfig:

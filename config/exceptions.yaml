@@ -79,7 +79,7 @@ components:
     PromptBuilderService:
       status: active
 
-    AIClientBuilderService:
+    ClientBuilderService:
       status: active
 
     SourceCodePreprocessingService:
@@ -143,7 +143,7 @@ prefixes:
     owner: PromptLoaderService
 
   AI:
-    owner: AIClientBuilderService
+    owner: ClientBuilderService
 
   PRE:
     owner: SourceCodePreprocessingService
@@ -237,7 +237,7 @@ errors:
 
   AI001:
     origin: CoreService
-    owner: AIClientBuilderService
+    owner: ClientBuilderService
     category: AI
     severity: ERROR
     recoverable: false

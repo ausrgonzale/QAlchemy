@@ -1,63 +1,51 @@
 # =============================================================================
-# QAlchemy AI Work Order
-# -----------------------------------------------------------------------------
+# QAlchemy Work Order
+# =============================================================================
+#
 # Purpose
 # -------
-# An AI Work Order is the canonical engineering contract used by QAlchemy to
-# describe work that is to be performed by the framework.
+# Defines the engineering work to be performed by the QAlchemy application.
 #
-# The Work Order defines one or more AI Units of Work, the engineering
-# objective, supporting artifacts, execution constraints, and the expected
-# response contract required to successfully complete the requested task.
+# A Work Order is the canonical engineering contract exchanged between the
+# Orchestration Service and Feature Services.
 #
-# The AI Work Order represents WHAT work is to be performed.
+# This file describes WHAT work is to be performed.
+#
+# Application behavior (AI providers, prompt rendering, validation,
+# logging, reporting, etc.) is configured separately in app.yaml.
 #
 # Runtime Flow
 # ------------
-#   AI Work Order YAML
+#
+#     User Request
 #          │
 #          ▼
-#   AIWorkOrderBuilderService
+#   Orchestration Service
 #          │
 #          ▼
-#   AIWorkOrder (Domain Object)
+#     Work Order
 #          │
 #          ▼
-#   AIUnitOfWork
+#    Feature Service
 #          │
 #          ▼
 #   PromptBuilderService
 #          │
 #          ▼
-#   AIRequest
-#          │
-#          ▼
-#   AI Provider
-#          │
-#          ▼
-#   AIResponse
-#
-# Relationship to app.yaml
-# ------------------------
-# This file defines WHAT work QAlchemy performs.
-#
-# Framework behavior (AI provider selection, logging, prompt rendering,
-# validation, debugging, and other runtime options) is configured separately
-# in config/app.yaml.
+#      AI Provider
 #
 # Design Principles
 # -----------------
-# • Engineering work is defined as one or more AI Units of Work.
-# • Every AI Unit of Work is independently executable.
-# • Supporting artifacts are explicitly declared.
-# • Expected outputs are defined through a Response Contract.
-# • The Work Order is provider-independent and contains no AI-specific
-#   implementation details.
+# • Work is described, not executed.
+# • Work Orders are provider independent.
+# • Feature Services consume Work Orders.
+# • One Work Order may contain one or more Units of Work.
 #
 # NOTE
 # ----
-# Version 1.2.1 supports a single executable AI Unit of Work.
-# Multiple Units of Work and orchestration are planned for QAlchemy 2.x.
+# Version 1.2 supports a single executable Unit of Work.
+# Multiple Units of Work will be introduced in a future release.
+#
 # =============================================================================
 
 work_order:
@@ -65,62 +53,75 @@ work_order:
   # ---------------------------------------------------------------------------
   # Work Order Metadata
   # ---------------------------------------------------------------------------
-  id: ""
 
-  name: ""
+  metadata:
 
-  description: ""
+    target: "CodeGeneration"
 
-  version: ""
+    name: "Generate Production Python Code"
 
-  priority: ""
+    description: >
+      Generate production-ready Python source code from an engineering
+      requirements document.
 
-  created_by: ""
-
-  created_on: ""
+    priority: "NORMAL"
 
   # ---------------------------------------------------------------------------
-  # AI Units of Work
+  # Units of Work
   # ---------------------------------------------------------------------------
+
   units_of_work:
 
-    - id: ""
+    - name: "Generate Source Code"
 
-      name: ""
-
-      service: ""
-
-      objective: ""
+      objective: >
+        Generate production-ready Python code from the supplied engineering
+        requirements.
 
       # -----------------------------------------------------------------------
-      # AI Instructions
+      # Prompt Instructions
       # -----------------------------------------------------------------------
-      system_instructions: []
+
+      system_prompt:
+
+        - "generation_instructions.md"
 
       user_instructions: []
 
       # -----------------------------------------------------------------------
       # Supporting Engineering Artifacts
       # -----------------------------------------------------------------------
-      supporting_artifacts: []
+
+      artifacts:
+
+        - "python_standards.md"
+
+        - "code_standards.md"
 
       # -----------------------------------------------------------------------
       # Execution Constraints
       # -----------------------------------------------------------------------
-      constraints: {}
+
+      constraints:
+
+        language: "python"
 
       # -----------------------------------------------------------------------
-      # Expected Response Contract
+      # Expected Response
       # -----------------------------------------------------------------------
+
       response_contract:
 
-        format: ""
+        format: "markdown"
 
         template: ""
 
-        required_sections: []
+        required_sections:
+
+          - "Implementation"
 
       # -----------------------------------------------------------------------
       # Reserved for Future Releases
       # -----------------------------------------------------------------------
+
       execution_options: {}

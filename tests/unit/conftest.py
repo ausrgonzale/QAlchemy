@@ -9,7 +9,7 @@ import pytest
 import yaml
 
 from scripts.core.exception_catalog import ExceptionCatalog
-from services.core.app_configuration_service import (
+from services.app.app_configuration_service import (
     AppConfigurationService,
     LoggingConfiguration,
 )

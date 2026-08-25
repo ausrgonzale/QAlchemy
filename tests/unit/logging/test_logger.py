@@ -4,7 +4,7 @@ Unit tests for Logger.
 
 from scripts.core.logger import Logger
 from scripts.core.logger_config import LoggerConfig
-from scripts.core.path_utils import relative_path
+from scripts.utils.relative_path import relative_path
 
 KEEP_TEST_ARTIFACTS = True
 

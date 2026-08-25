@@ -12,7 +12,7 @@ Purpose:
 from datetime import UTC, datetime
 from pathlib import Path
 
-from scripts.core.runtime_context import RuntimeContext
+from scripts.utils.runtime_context import RuntimeContext
 
 
 class TestRuntimeContext:

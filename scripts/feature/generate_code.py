@@ -6,7 +6,7 @@ import argparse
 import logging
 from pathlib import Path
 
-from services.feature.code_generation_service import CodeGenerationService
+from archive.prototype.archive.code_generation_service import CodeGenerationService
 
 logger = logging.getLogger(__name__)
 

@@ -1,149 +1,197 @@
+# =============================================================================
+# QAlchemy Application Configuration
+# =============================================================================
 #
-# Automation Framework Configuration
+# Purpose
+# -------
+# Central configuration registry for QAlchemy application behavior.
 #
-# Version 1.0
+# Engineering work is represented by canonical Work Orders created at runtime.
 #
+# =============================================================================
 
-#
-# Framework Metadata
-#
+# =============================================================================
+# Application Metadata
+# =============================================================================
 app:
+
   name: "QAlchemy"
-  version: "1.1.0"
+
+  version: "1.2.0"
+
   edition: "Community"
 
+
+# =============================================================================
+# AI Client Configuration
 #
-# AI Provider Configuration
-#
-# Defines the default AI provider, model, and generation settings used
-# throughout the framework. Individual scripts may override these values
-# at runtime when appropriate.
-#
-ai:
+# Defines the default AI provider and execution settings.
+# =============================================================================
+client:
+
   provider: "ollama"
+
   default_model: "gpt-oss:120b-cloud"
+
   request_timeout: 120
+
   stream: false
 
   options:
+
     temperature: 0.2
+
     top_p: 0.95
+
     max_tokens: 4096
+
     seed: null
 
-#
-# AI Prompt Library
-#
-# Prompt assets used to construct AI system prompts.
-# The PromptBuilderService combines these files to produce the final
-# instruction set sent to the selected AI provider.
-#
-prompts:
-  root: "prompts"
 
-  code_standards: "code_standards.md"
-  python_standards: "python_standards.md"
-  playwright_standards: "playwright_standards.md"
-
-  generation_instructions: "generation_instructions.md"
-  review_instructions: "review_instructions.md"
-
-  markdown_contract: "markdown_contract.md"
-
+# =============================================================================
+# Work Order Configuration
 #
-# Report Templates
+# Defines Work Order validation and persistent storage behavior.
 #
-# Markdown templates used to render framework-generated reports.
+# Work Orders are created at runtime from RuntimeRequests.
+# =============================================================================
+work_order:
+
+  validation:
+
+    enabled: true
+
+    fail_on_missing_required_field: true
+
+    fail_on_invalid_definition: true
+
+  runtime:
+
+    allow_multiple_units_of_work: false
+
+    stop_on_validation_failure: true
+
+    persist_to_disk: true
+
+    directory: "work_orders"
+
+
+# =============================================================================
+# WorkSpace Configuration
 #
+# Defines the root location for Work Order execution workspaces.
+#
+# Each Work Order receives a uniquely identified workspace.
+#
+# Example:
+#
+#     work_space/
+#         WOGCS20260823155841-7690/
+#             output/
+#
+# =============================================================================
+workspace:
+
+  root: "work_space"
+
+
+# =============================================================================
+# Output Templates
+#
+# Templates used to render generated output.
+# =============================================================================
 templates:
+
   root: "templates"
+
   code_review_report: "code_review_report_template.md"
+
+
+# =============================================================================
+# Report Output
 #
-# Report Generation
-#
-# Controls report output locations and configurable report content.
-#
+# Controls report generation and debug artifacts.
+# =============================================================================
 reports:
+
   output_root: "reports"
+
   debug_output_root: "reports/debug"
 
   review:
+
+    output_directory: "reports/reviews/code_reviews"
+
     fields:
+
       source_file: true
+
       lines_reviewed: true
+
       provider: true
+
       model: true
+
       execution_time: true
+
       review_date: true
 
-#
-# Framework Logging
-#
-# Controls framework logging behavior and Debug 
-# configuration
-#
 
+# =============================================================================
+# Logging Configuration
+#
+# Defines application logging behavior.
+# =============================================================================
 logging:
+
   level: "INFO"
-  output_root: logs
-  base_filename: qalchemy
-  extension: ""
-  
+
+  output_root: "logs"
+
+  base_filename: "qalchemy"
+
+  extension: ".log"
+
   debug:
+
     enabled: true
+
     save_prompt: true
+
     save_response: true
+
     overwrite_files: true
 
+
+# =============================================================================
+# Exception Handling Configuration
+#
+# Defines application exception handling and exception catalog behavior.
+# =============================================================================
 exceptions:
+
   enabled: true
 
   catalog:
+
     root: "config"
+
     filename: "exceptions.yaml"
 
   defaults:
+
     unknown_exception_code: "QAL-EX-999"
+
     validation_exception_code: "QAL-EX-001"
+
     internal_exception_code: "QAL-EX-999"
 
   logging:
+
     log_exceptions: true
+
     include_stack_trace: true
 
   user_messages:
+
     expose_internal_errors: false
-
-# -----------------------------------------------------------------------------
-# Prompt Builder Configuration
-#
-# Controls how the PromptBuilderService assembles AI requests from AI Units of
-# Work. These settings define framework behavior and apply to all Work Orders
-# unless explicitly overridden.
-#
-# NOTE:
-#   This section configures HOW prompts are built.
-#   It does NOT define WHAT work is performed. Engineering work is defined
-#   separately in AI Work Order YAML files.
-# -----------------------------------------------------------------------------
-prompt_builder:
-
-  validation:
-    enabled: true
-    fail_on_missing_artifact: true
-    fail_on_invalid_work_order: true
-
-  artifacts:
-    preprocess: true
-    compression:
-      enabled: true
-      mode: summary
-      max_tokens: 3000
-
-  rendering:
-    provider: markdown
-
-  output:
-    write_prompt_to_disk: true
-    output_directory: reports/debug/prompts
-    include_metadata: true

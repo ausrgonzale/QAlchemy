@@ -1,19 +1,50 @@
-"""Unit tests for ReportWriter in reporting.py (v2)."""
+"""
+===============================================================================
+Unit Tests
+
+ReportWriter
+
+Validates Markdown report rendering and delegation of persistence.
+
+Responsibilities Tested
+-----------------------
+- Template loading.
+- Markdown rendering.
+- Report metadata generation.
+- Destination path resolution.
+- Delegation to FileWriter.
+- RuntimeContext destination preservation.
+
+Non-Responsibilities
+--------------------
+These tests do NOT:
+
+- Test FileWriter.
+- Test AppConfigurationService.
+- Invoke AI providers.
+- Execute CodeReviewService.
+- Build WorkOrders.
+- Perform orchestration.
+===============================================================================
+"""
 
 from __future__ import annotations
 
 from datetime import UTC, datetime
 from pathlib import Path
+from unittest.mock import Mock
 
 import pytest
 
-import scripts.core.reporting as reporting_module
-from scripts.core.reporting import ReportWriter
-from scripts.core.runtime_context import RuntimeContext
-from services.core.app_configuration_service import AppConfigurationService
+import scripts.core.report_writer as reporting_module
+from scripts.core.report_writer import ReportWriter
+from scripts.utils.runtime_context import RuntimeContext
+from services.app.app_configuration_service import AppConfigurationService
 
 
 class _Fields:
+    """Test configuration for report metadata fields."""
+
     def __init__(
         self,
         *,
@@ -39,50 +70,36 @@ def _build_configuration(
     template_name: str,
     fields: _Fields,
 ) -> AppConfigurationService:
-    """Build a real AppConfigurationService backed by fake config data."""
+    """Build an AppConfigurationService using test configuration."""
+
     fake_config = {
         "app": {
-            "name": "Automation Framework",
-            "version": "1.0.0",
+            "name": "QAlchemy",
+            "version": "1.2.0",
             "edition": "Community",
         },
-        "ai": {
+        "client": {
             "provider": "ollama",
             "default_model": "qwen3-coder:480b-cloud",
             "request_timeout": 120,
             "stream": False,
         },
-        "prompts": {
-            "root": "prompts",
-            "code_standards": "code_standards.md",
-            "python_standards": "python_standards.md",
-            "playwright_standards": "playwright_standards.md",
-            "generation_instructions": "generation_instructions.md",
-            "review_instructions": "review_instructions.md",
-            "markdown_contract": "markdown_contract.md",
-        },
-        "prompt_builder": {
+        "work_order": {
             "validation": {
                 "enabled": True,
-                "fail_on_missing_artifact": True,
-                "fail_on_invalid_work_order": True,
+                "fail_on_missing_required_field": True,
+                "fail_on_invalid_definition": True,
             },
-            "artifacts": {
-                "preprocess": True,
-                "compression": {
-                    "enabled": True,
-                    "mode": "summary",
-                    "max_tokens": 3000,
-                },
+            "runtime": {
+                "allow_multiple_units_of_work": False,
+                "stop_on_validation_failure": True,
+                "persist_to_disk": True,
+                "directory": "work_orders",
+                "filename": "work_order.md",
             },
-            "rendering": {
-                "provider": "markdown",
-            },
-            "output": {
-                "write_prompt_to_disk": True,
-                "output_directory": "reports/debug/prompts",
-                "include_metadata": True,
-            },
+        },
+        "workspace": {
+            "root": "work_space",
         },
         "templates": {
             "root": template_root,
@@ -92,6 +109,7 @@ def _build_configuration(
             "output_root": "reports",
             "debug_output_root": "reports/debug",
             "review": {
+                "output_directory": "reports/reviews",
                 "fields": {
                     "source_file": fields.source_file,
                     "lines_reviewed": fields.lines_reviewed,
@@ -104,10 +122,13 @@ def _build_configuration(
         },
         "logging": {
             "level": "INFO",
+            "output_root": "logs",
+            "base_filename": "qalchemy",
+            "extension": ".log",
             "debug": {
                 "enabled": True,
-                "save_prompt": True,
-                "save_response": True,
+                "save_prompt": False,
+                "save_response": False,
                 "overwrite_files": True,
             },
         },
@@ -147,33 +168,29 @@ def _build_writer(
     *,
     template_text: str,
     fields: _Fields | None = None,
-) -> ReportWriter:
-    """Build ReportWriter configured to load templates from temporary test directory."""
-    #
-    # Build a fake project layout.
-    #
-    # tmp_path/
-    # ├── scripts/
-    # │   └── core/
-    # │       └── reporting.py
-    # └── templates/
-    #     └── template.md
-    #
+) -> tuple[ReportWriter, Mock]:
+    """Build a ReportWriter with a mocked FileWriter."""
 
-    project_root = tmp_path
-
-    template_directory = project_root / "templates"
-    template_directory.mkdir(parents=True, exist_ok=True)
+    template_directory = tmp_path / "templates"
+    template_directory.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
 
     template_name = "template.md"
+
     (template_directory / template_name).write_text(
         template_text,
         encoding="utf-8",
     )
 
-    fake_reporting = project_root / "scripts" / "core" / "reporting.py"
+    fake_reporting = tmp_path / "scripts" / "core" / "reporting.py"
 
-    fake_reporting.parent.mkdir(parents=True, exist_ok=True)
+    fake_reporting.parent.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
     fake_reporting.touch()
 
     monkeypatch.setattr(
@@ -189,19 +206,41 @@ def _build_writer(
         fields=fields or _Fields(),
     )
 
-    return ReportWriter(configuration)
+    file_writer = Mock()
+
+    writer = ReportWriter(
+        configuration=configuration,
+        file_writer=file_writer,
+    )
+
+    return writer, file_writer
 
 
-def _build_runtime_context(tmp_path: Path) -> RuntimeContext:
-    """Build a runtime context with common metadata used by ReportWriter tests."""
+def _build_runtime_context(
+    tmp_path: Path,
+) -> RuntimeContext:
+    """Build RuntimeContext with common report metadata."""
+
     runtime_context = RuntimeContext()
-    runtime_context.source_file = Path("services/review_instructions_service.py")
+
+    runtime_context.source_file = Path(
+        "services/review_instructions_service.py",
+    )
     runtime_context.destination_file = tmp_path / "reports" / "review.md"
     runtime_context.provider = "ollama"
     runtime_context.model = "qwen3-coder:480b-cloud"
     runtime_context.execution_time = 3.456
     runtime_context.lines_reviewed = 42
-    runtime_context.review_date = datetime(2026, 7, 13, 10, 15, 30, tzinfo=UTC)
+    runtime_context.review_date = datetime(
+        2026,
+        7,
+        13,
+        10,
+        15,
+        30,
+        tzinfo=UTC,
+    )
+
     return runtime_context
 
 
@@ -209,26 +248,31 @@ def test_load_template_reads_file(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Read template contents from configured template path."""
-    writer = _build_writer(
+    """Read template contents from the configured template path."""
+
+    writer, _ = _build_writer(
         tmp_path,
         monkeypatch,
         template_text="{{ review_information }}\n{{ review }}",
     )
 
-    assert writer._load_template() == "{{ review_information }}\n{{ review }}"
+    assert writer._load_template() == ("{{ review_information }}\n{{ review }}")
 
 
 def test_render_markdown_template_replaces_both_placeholders(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Render markdown by replacing review placeholders with runtime values."""
-    writer = _build_writer(
+    """Render Markdown using runtime review values."""
+
+    writer, _ = _build_writer(
         tmp_path,
         monkeypatch,
-        template_text="Header\n\n{{ review_information }}\n\nBody:\n{{ review }}\n",
+        template_text=(
+            "Header\n\n" "{{ review_information }}\n\n" "Body:\n" "{{ review }}\n"
+        ),
     )
+
     runtime_context = _build_runtime_context(tmp_path)
 
     rendered = writer._render_markdown_template(
@@ -242,12 +286,13 @@ def test_render_markdown_template_replaces_both_placeholders(
     assert "| Source File | services/review_instructions_service.py |" in rendered
 
 
-def test_write_creates_parent_directory_and_writes_report(
+def test_write_delegates_persistence_to_file_writer(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Create parent directory and write rendered markdown to destination."""
-    writer = _build_writer(
+    """Delegate rendered report persistence to FileWriter."""
+
+    writer, file_writer = _build_writer(
         tmp_path,
         monkeypatch,
         template_text="{{ review_information }}\n\n{{ review }}",
@@ -255,22 +300,29 @@ def test_write_creates_parent_directory_and_writes_report(
 
     runtime_context = _build_runtime_context(tmp_path)
 
-    output = writer.write(review="Final review", runtime_context=runtime_context)
+    output = writer.write(
+        review="Final review",
+        runtime_context=runtime_context,
+    )
 
     assert output == runtime_context.destination_file
-    assert output.exists()
 
-    written = output.read_text(encoding="utf-8")
-    assert "Final review" in written
-    assert "| Execution Time | 3.46 seconds |" in written
+    file_writer.write.assert_called_once()
+
+    call = file_writer.write.call_args
+
+    assert call.kwargs["path"] == runtime_context.destination_file
+    assert "Final review" in call.kwargs["content"]
 
 
 def test_build_review_information_respects_field_toggles(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Include only enabled metadata fields in review information table."""
+    """Include only enabled metadata fields."""
+
     runtime_context = _build_runtime_context(tmp_path)
+
     fields = _Fields(
         source_file=True,
         provider=False,
@@ -279,7 +331,8 @@ def test_build_review_information_respects_field_toggles(
         lines_reviewed=True,
         review_date=False,
     )
-    writer = _build_writer(
+
+    writer, _ = _build_writer(
         tmp_path,
         monkeypatch,
         template_text="{{ review_information }}\n{{ review }}",
@@ -299,10 +352,12 @@ def test_build_review_information_skips_optional_values_when_none(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Skip optional rows when fields are disabled or values are unavailable."""
+    """Skip metadata rows when values are unavailable."""
+
     runtime_context = _build_runtime_context(tmp_path)
     runtime_context.lines_reviewed = None
-    writer = _build_writer(
+
+    writer, _ = _build_writer(
         tmp_path,
         monkeypatch,
         template_text="{{ review_information }}\n{{ review }}",
@@ -312,4 +367,5 @@ def test_build_review_information_skips_optional_values_when_none(
     table = writer._build_review_information(runtime_context)
 
     assert "| Lines Reviewed |" not in table
-    assert "AM" not in table and "PM" not in table
+    assert "AM" not in table
+    assert "PM" not in table

@@ -6,7 +6,7 @@ from datetime import UTC, datetime
 
 from scripts.core.logger import Logger
 from scripts.core.logger_config import LoggerConfig
-from services.core.app_configuration_service import AppConfigurationService
+from services.app.app_configuration_service import AppConfigurationService
 from services.core.logger_service import LoggerService
 
 # When True, keep logs/qalchemy.log updates for manual review.
