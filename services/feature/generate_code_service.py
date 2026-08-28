@@ -85,6 +85,9 @@ class GenerateCodeService:
             response,
         )
 
+        print(">>> NORMALIZED RESPONSE:")
+        print(normalized_response)
+
         artifacts = create_generated_artifacts(
             work_order,
             normalized_response,
@@ -102,12 +105,6 @@ class GenerateCodeService:
                 artifact.content,
                 encoding="utf-8",
             )
-
-        self._logger.log(
-            level="INFO",
-            message=f"Created {len(artifacts)} generated artifact(s).",
-            operation="execute",
-        )
 
         self._logger.log(
             level="INFO",

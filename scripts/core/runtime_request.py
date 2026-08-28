@@ -16,8 +16,8 @@ RuntimeRequest is the transport contract between the QAlchemy application
 entry point and the orchestration layer.
 
 It describes the engineering work requested at runtime, including the task,
-role, target feature, deliverable location, and optional reference material
-locations.
+role, target feature, deliverable definition, source code locations, and
+optional reference material locations.
 
 RuntimeRequest contains request metadata and file locations. It does not
 contain the engineering content itself.
@@ -50,7 +50,8 @@ Responsibilities
 - Preserve the selected engineering role.
 - Preserve the target QAlchemy feature.
 - Identify the deliverable definition.
-- Identify optional reference material.
+- Identify source code input locations.
+- Identify optional reference material locations.
 - Provide a stable transport contract between application layers.
 
 Non-Responsibilities
@@ -59,6 +60,7 @@ RuntimeRequest does NOT:
 
 - Read files.
 - Build WorkOrders.
+- Resolve source code.
 - Resolve reference material.
 - Contain engineering document content.
 - Render prompts.
@@ -77,8 +79,8 @@ It represents what was requested at runtime and where supporting artifacts
 can be found. Content resolution and WorkOrder construction are handled by
 the WorkOrderBuilderService.
 
-Optional reference material is identified by file location and is not
-required for a RuntimeRequest to be valid.
+Source code and reference material are identified by file or directory
+locations and are not required to contain resolved engineering content.
 
 ===============================================================================
 """
@@ -119,6 +121,12 @@ class RuntimeRequest:
     #
 
     deliverable: Path
+
+    #
+    # Source Code
+    #
+
+    source_code: list[Path] = field(default_factory=list)
 
     #
     # Optional Reference Material

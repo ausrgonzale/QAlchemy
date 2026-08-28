@@ -65,24 +65,31 @@ def create_generated_artifacts(
     lines = work_order.deliverable.splitlines()
 
     for index, line in enumerate(lines):
-        if line.strip() == "## Required Artifact":
-            for candidate in lines[index + 1 :]:
-                candidate = candidate.strip()
+        if line.strip() != "## Required Artifact":
+            continue
 
-                if not candidate:
-                    continue
+        for candidate in lines[index + 1 :]:
+            candidate = candidate.strip()
 
-                if candidate.lower().startswith("generate exactly one file"):
-                    continue
+            if not candidate:
+                continue
 
-                if candidate.startswith("#"):
-                    continue
+            if candidate.startswith("```"):
+                continue
 
-                return (
-                    GeneratedArtifact(
-                        relative_path=candidate,
-                        content=response,
-                    ),
-                )
+            if candidate.lower().startswith("generate exactly one file"):
+                continue
+
+            if candidate.startswith("#"):
+                continue
+
+            return (
+                GeneratedArtifact(
+                    relative_path=candidate,
+                    content=response,
+                ),
+            )
+
+        break
 
     raise ValueError("WorkOrder deliverable does not define a required artifact.")

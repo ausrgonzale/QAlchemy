@@ -12,9 +12,8 @@ Purpose:
 
 Description:
     WorkSpace owns the physical directory structure associated with a Work
-    Order. It creates the Work Order workspace, including the locations for
-    the role, deliverable, and execution output, while remaining independent
-    of artifact generation and file persistence.
+    Order. It creates the Work Order workspace and execution output while
+    remaining independent of artifact generation and file persistence.
 
 Responsibilities
 ----------------
@@ -22,9 +21,8 @@ Responsibilities
 - Define the current Work Order workspace.
 - Expose the Work Order identifier.
 - Create the Work Order workspace structure.
-- Expose the role path.
-- Expose the deliverable path.
 - Expose the output root for downstream writers.
+- Expose the Work Order path.
 
 Non-Responsibilities
 --------------------
@@ -82,29 +80,23 @@ class WorkSpace:
         return self._root / self._work_order_id
 
     @property
-    def role_path(self) -> Path:
-        """Return the path for the Work Order role."""
-
-        return self.workspace_root / "role.md"
-
-    @property
-    def deliverable_path(self) -> Path:
-        """Return the path for the Work Order deliverable."""
-
-        return self.workspace_root / "deliverable.md"
-
-    @property
     def output_root(self) -> Path:
         """Return the output directory for generated artifacts."""
 
         return self.workspace_root / "output"
+
+    @property
+    def work_order_path(self) -> Path:
+        """Return the path for the Work Order within the WorkSpace."""
+
+        return self.workspace_root / f"{self.work_order_id}.md"
 
     def create(self) -> None:
         """
         Create the Work Order workspace structure.
         """
 
-        self.role_path.parent.mkdir(
+        self.workspace_root.mkdir(
             parents=True,
             exist_ok=True,
         )

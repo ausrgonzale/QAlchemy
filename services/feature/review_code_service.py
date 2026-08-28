@@ -19,15 +19,7 @@ Version 1.2
 - Transforms the WorkOrder into an LLM request.
 - Delegates AI execution to the AppExecutionService.
 - Produces an engineering code review.
-
-Future Versions
----------------
-Future versions will:
-
-- Normalize AI responses.
-- Persist engineering review artifacts.
-- Return structured review results.
-- Support orchestration result processing.
+- Renders the engineering review into Markdown.
 
 Architecture
 ------------
@@ -40,10 +32,13 @@ application components and remains focused on workflow coordination.
 Responsibilities
 ----------------
 - Receive the canonical WorkOrder.
+- Read source files provided for review.
+- Preprocess source code.
 - Transform the WorkOrder into an LLM request.
 - Acquire the configured AI client.
 - Submit the review request to the LLM.
-- Produce the engineering review.
+- Render the engineering review into Markdown.
+- Return the rendered review.
 
 Non-Responsibilities
 --------------------
@@ -51,17 +46,17 @@ The ReviewCodeService does NOT:
 
 - Build WorkOrders.
 - Modify WorkOrders.
-- Load engineering documents.
-- Transform engineering artifacts.
+- Determine output destinations.
 - Write files.
-- Perform logging implementation.
-- Translate runtime exceptions.
+- Create directories.
 - Coordinate application workflows.
 
 Dependencies
 ------------
 - AppExecutionService
 - WorkOrderTransformer
+- SourceCodePreprocessor
+- ReportWriter
 
 Current Consumers
 -----------------
@@ -76,12 +71,9 @@ from scripts.core.report_writer import ReportWriter
 from scripts.core.work_order import WorkOrder
 from scripts.core.work_order_transformer import WorkOrderTransformer
 from scripts.feature.source_code_preprocessor import SourceCodePreprocessor
-from scripts.utils.file_writer import FileWriter
 from scripts.utils.runtime_context import RuntimeContext
+from scripts.utils.work_space import WorkSpace
 from services.app.app_execution_service import AppExecutionService
-
-REVIEW_INPUT_FILE = Path("working/output/calculator.py")
-REVIEW_OUTPUT_FILE = Path("working/output/review.md")
 
 
 class ReviewCodeService:
@@ -108,7 +100,15 @@ class ReviewCodeService:
     def execute(
         self,
         work_order: WorkOrder,
-    ) -> None:
+        workspace: WorkSpace,
+        source_files: list[Path],
+    ) -> str:
+        """
+        Execute the Review Code feature.
+
+        Returns:
+            Rendered Markdown code review report.
+        """
 
         self._logger.log(
             level="INFO",
@@ -116,12 +116,23 @@ class ReviewCodeService:
             message="Entering ReviewCodeService.execute().",
         )
 
-        source_code = REVIEW_INPUT_FILE.read_text(
-            encoding="utf-8",
-        )
+        source_parts: list[str] = []
 
-        source_code = self._source_code_preprocessor.preprocess(
-            source_code,
+        for source_file in source_files:
+            content = source_file.read_text(
+                encoding="utf-8",
+            )
+
+            content = self._source_code_preprocessor.preprocess(
+                content,
+            )
+
+            source_parts.append(
+                f"FILE: {source_file}\n\n{content}",
+            )
+
+        source_code = "\n\n".join(
+            source_parts,
         )
 
         request = self._work_order_transformer.transform(
@@ -137,16 +148,19 @@ class ReviewCodeService:
 
         runtime_context = RuntimeContext()
 
-        runtime_context.source_file = REVIEW_INPUT_FILE
+        runtime_context.source_file = source_files[0] if source_files else None
 
-        # Future - Inject self._report_write from AppBootStrapService
+        runtime_context.provider = self._execution_service.configuration.client.provider
 
-        report_writer = ReportWriter(
-            configuration=self._execution_service.configuration,
-            file_writer=FileWriter(),
+        runtime_context.model = (
+            self._execution_service.configuration.client.default_model
         )
 
-        output_path = report_writer.write(
+        report_writer = ReportWriter(
+            configuration=(self._execution_service.configuration),
+        )
+
+        rendered_report = report_writer.render(
             review=review,
             runtime_context=runtime_context,
         )
@@ -154,5 +168,7 @@ class ReviewCodeService:
         self._logger.log(
             level="INFO",
             operation="execute",
-            message=f"Review written to {output_path}",
+            message="Review report rendered.",
         )
+
+        return rendered_report

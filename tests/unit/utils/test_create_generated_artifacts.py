@@ -18,9 +18,10 @@ Description:
 Responsibilities
 ----------------
 - Verify artifact paths are extracted from the Deliverable.
+- Verify Markdown-formatted artifact paths are supported.
 - Verify generated content is preserved.
 - Verify GeneratedArtifact objects are created correctly.
-- Verify multiple requested artifacts can be represented.
+- Verify missing artifact definitions raise an error.
 
 Non-Responsibilities
 --------------------
@@ -47,6 +48,8 @@ from scripts.utils.create_generated_artifacts import (
 
 
 def test_creates_generated_artifact_from_deliverable() -> None:
+    """Extract an artifact path from a plain-text deliverable definition."""
+
     work_order = WorkOrder(
         task="Create a Playwright automation solution.",
         role="Act as a Senior Playwright Automation Architect.",
@@ -78,7 +81,40 @@ pages/google_search_page.py
     )
 
 
+def test_extracts_artifact_path_from_markdown_code_block() -> None:
+    """Extract an artifact path from a Markdown code block."""
+
+    work_order = WorkOrder(
+        task="Create a Playwright automation solution.",
+        role="Act as a Senior Playwright Automation Architect.",
+        target="generate_code",
+        deliverable=(
+            "## Required Artifact\n\n"
+            "Generate exactly one file:\n\n"
+            "```text\n"
+            "pages/google_search_page.py\n"
+            "```\n"
+        ),
+    )
+
+    response = "from playwright.sync_api import Page"
+
+    result = create_generated_artifacts(
+        work_order,
+        response,
+    )
+
+    assert result == (
+        GeneratedArtifact(
+            relative_path="pages/google_search_page.py",
+            content=response,
+        ),
+    )
+
+
 def test_preserves_normalized_provider_response() -> None:
+    """Preserve the normalized provider response as artifact content."""
+
     work_order = WorkOrder(
         task="Create a Playwright automation solution.",
         role="Act as a Senior Playwright Automation Architect.",
@@ -106,6 +142,8 @@ pages/google_search_page.py
 
 
 def test_raises_error_when_required_artifact_is_missing() -> None:
+    """Raise an error when the deliverable defines no required artifact."""
+
     work_order = WorkOrder(
         task="Create a Playwright automation solution.",
         role="Act as a Senior Playwright Automation Architect.",

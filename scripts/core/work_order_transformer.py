@@ -84,6 +84,7 @@ class WorkOrderTransformer:
     def transform(
         self,
         work_order: WorkOrder,
+        source_code: str = "",
     ) -> str:
         """
         Transforms a WorkOrder into an LLM request.
@@ -94,6 +95,7 @@ class WorkOrderTransformer:
             self._render_section("TASK", work_order.task),
             self._render_section("ROLE", work_order.role),
             self._render_section("TARGET", work_order.target),
+            self._render_section("SOURCE CODE", source_code),
             self._render_section("DELIVERABLE", work_order.deliverable),
             self._render_section("REFERENCES", work_order.references),
         ]

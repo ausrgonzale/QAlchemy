@@ -58,6 +58,14 @@ def parse_arguments() -> argparse.Namespace:
     )
 
     parser.add_argument(
+        "--source_code",
+        action="append",
+        help=(
+            "Path to source code file or directory. " "May be specified multiple times."
+        ),
+    )
+
+    parser.add_argument(
         "--reference",
         action="append",
         help="Path to optional reference material. May be specified multiple times.",
@@ -78,6 +86,7 @@ def main() -> int:
         role=Path(args.role),
         target=args.target,
         deliverable=Path(args.deliverable),
+        source_code=[Path(p) for p in (args.source_code or [])],
         references=[Path(p) for p in (args.reference or [])],
     )
 

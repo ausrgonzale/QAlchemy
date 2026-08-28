@@ -4,7 +4,7 @@ File Descriptor Header
 ===============================================================================
 
 File:
-    reporting.py
+    report_writing.py
 
 Purpose:
     Provides Markdown report rendering services for QAlchemy.
@@ -20,14 +20,10 @@ Responsibilities:
     - Load report templates.
     - Render Markdown reports.
     - Build report metadata.
-    - Determine default report names.
 
 Non-Responsibilities:
+    - Determine report destinations.
     - Write files.
-    - Create directories.
-    - Perform AI operations.
-    - Build WorkOrders.
-    - Determine workflow execution.
 
 Workflow:
     Review Content
@@ -42,14 +38,12 @@ Workflow:
 
 Dependencies:
     - AppConfigurationService
-    - FileWriter
 
 ===============================================================================
 """
 
 from pathlib import Path
 
-from scripts.utils.file_writer import FileWriter
 from scripts.utils.runtime_context import RuntimeContext
 from services.app.app_configuration_service import (
     AppConfigurationService,
@@ -69,14 +63,12 @@ class ReportWriter:
     def __init__(
         self,
         configuration: AppConfigurationService,
-        file_writer: FileWriter,
     ) -> None:
         """
         Initialize the ReportWriter.
         """
 
         self._configuration = configuration
-        self._file_writer = file_writer
 
     def _load_template(self) -> str:
         """
@@ -125,57 +117,22 @@ class ReportWriter:
     # Future versions will obtain report destinations from the
     # Runtime Object (RTO).
     # -------------------------------------------------------------------------
-
-    def _build_destination_path(
-        self,
-        runtime_context: RuntimeContext,
-    ) -> Path:
-        """
-        Build the default destination report path.
-        """
-
-        if runtime_context.source_file is None:
-            raise ValueError("RuntimeContext.source_file has not been set.")
-
-        report_directory = Path(
-            self._configuration.reports.review.output_directory,
-        )
-
-        report_name = f"{runtime_context.source_file.stem}_review.md"
-
-        return report_directory / report_name
-
-    def write(
+    def render(
         self,
         review: str,
         runtime_context: RuntimeContext,
-    ) -> Path:
+    ) -> str:
         """
-        Generate and persist a Markdown report.
+        Render the Markdown engineering review report.
 
         Returns:
-            Path to the generated report.
+            Rendered Markdown report content.
         """
 
-        destination = runtime_context.destination_file
-
-        if destination is None:
-            destination = self._build_destination_path(
-                runtime_context,
-            )
-            runtime_context.destination_file = destination
-
-        markdown = self._render_markdown_template(
+        return self._render_markdown_template(
             review=review,
             runtime_context=runtime_context,
         )
-
-        self._file_writer.write(
-            path=destination,
-            content=markdown,
-        )
-
-        return destination
 
     def _build_review_information(
         self,

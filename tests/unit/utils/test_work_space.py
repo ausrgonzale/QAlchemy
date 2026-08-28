@@ -19,8 +19,7 @@ Responsibilities
 - Verify the output directory is created.
 - Verify the Work Order identifier is exposed.
 - Verify the WorkSpace root is exposed.
-- Verify the role path is exposed.
-- Verify the deliverable path is exposed.
+- Verify the Work Order workspace root is exposed.
 - Verify the output root is exposed.
 
 Non-Responsibilities
@@ -61,8 +60,6 @@ def test_creates_work_order_output_structure(
 
     expected_root = workspace_root / "WO001"
     expected_output = expected_root / "output"
-    expected_role = expected_root / "role.md"
-    expected_deliverable = expected_root / "deliverable.md"
 
     assert expected_root.is_dir()
     assert expected_output.is_dir()
@@ -70,6 +67,4 @@ def test_creates_work_order_output_structure(
     assert workspace.root == workspace_root
     assert workspace.work_order_id == "WO001"
     assert workspace.workspace_root == expected_root
-    assert workspace.role_path == expected_role
-    assert workspace.deliverable_path == expected_deliverable
     assert workspace.output_root == expected_output

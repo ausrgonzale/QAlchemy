@@ -37,7 +37,11 @@ When generating Playwright automation:
 
 Artifact
 
-Return only the requested engineering artifacts.
+Return only the contents of the requested engineering artifacts.
+
+Do not include artifact filenames or file paths.
+
+Do not include Markdown code fences.
 
 Do not explain the implementation.
 
@@ -47,4 +51,4 @@ Do not provide usage instructions.
 
 Do not provide recommendations.
 
-Do not include commentary before or after the requested artifacts.
+Do not include commentary before or after the requested artifact content.
