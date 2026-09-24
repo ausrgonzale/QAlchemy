@@ -209,6 +209,14 @@ class TemplateConfiguration(ConfigurationSection):
     def code_review_report(self) -> str:
         return self._get("code_review_report")
 
+    @property
+    def requirement_reports(self) -> str:
+        return self._get("requirement_reports")
+
+    @property
+    def test_cases_reports(self) -> str:
+        return self._get("test_cases_reports")
+
 
 # =============================================================================
 # Reports

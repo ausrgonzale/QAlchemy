@@ -31,6 +31,7 @@ Future Consumers:
 from scripts.core.runtime_request import RuntimeRequest
 from scripts.core.work_order import WorkOrder
 from scripts.utils.file_reader import FileReader
+from scripts.utils.route_resolver import Route
 
 
 class WorkOrderBuilderService:
@@ -55,12 +56,16 @@ class WorkOrderBuilderService:
 
         self._file_reader = FileReader()
 
-    def build(self, runtime_request: RuntimeRequest) -> WorkOrder:
+    def build(
+        self,
+        runtime_request: RuntimeRequest,
+        route: Route,
+    ) -> WorkOrder:
         """
         Build an AI Work Order from a RuntimeRequest.
         """
 
-        role = self._read_role(runtime_request)
+        role = route.role
 
         deliverable = self._read_deliverable(runtime_request)
 
@@ -69,7 +74,7 @@ class WorkOrderBuilderService:
         return WorkOrder(
             task=runtime_request.task,
             role=role,
-            target=runtime_request.target,
+            target=route.target,
             deliverable=deliverable,
             references=references,
         )
@@ -82,8 +87,11 @@ class WorkOrderBuilderService:
 
     def _read_role(self, runtime_request: RuntimeRequest) -> str:
         """
-        Read the role definition.
+        Read the role definition when one is supplied.
         """
+
+        if runtime_request.role is None:
+            return ""
 
         return self._file_reader.read(
             runtime_request.role,

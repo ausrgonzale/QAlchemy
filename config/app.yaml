@@ -105,6 +105,8 @@ templates:
   root: "templates"
 
   code_review_report: "code_review_report_template.md"
+  requirement_reports: "requirement_eval_report_template.md"
+  test_cases_reports: "test_cases_analysis_report_template.md"
 
 
 # =============================================================================

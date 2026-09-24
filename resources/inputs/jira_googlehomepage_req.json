@@ -1,0 +1,36 @@
+{
+      "id": "GHP-001",
+      "key": "GHP-001",
+      "fields": {
+            "summary": "External Search Definition Should Align with QAlchemy Glossary Definition of \"Code Complete\"",
+            "description": "As a QAlchemy user, I want the publicly available definition of \"Code Complete\" (as returned by a standard Google search) to be consistent with the definition maintained in the QAlchemy glossary, so that users referencing external sources are not exposed to conflicting or misleading terminology.\n\nBackground: QAlchemy maintains an internal glossary of software quality and testing terms, including \"Code Complete.\" This requirement establishes that the QAlchemy definition must remain accurate and consistent with commonly accepted, publicly searchable definitions of the term, to preserve credibility and avoid user confusion.",
+            "issuetype": {
+                  "name": "Story"
+            },
+            "status": {
+                  "name": "Open"
+            },
+            "priority": {
+                  "name": "Medium"
+            },
+            "labels": [
+                  "google",
+                  "search",
+                  "requirements-validation",
+                  "glossary",
+                  "content-accuracy"
+            ],
+            "components": [
+                  {
+                        "name": "Web"
+                  }
+            ],
+            "acceptanceCriteria": [
+                  "Given a Google search for \"definition of Code Complete\", search results are returned that include a recognizable definition of the term.",
+                  "The publicly returned definition and the QAlchemy glossary definition of \"Code Complete\" convey the same core meaning (i.e., no material contradiction in scope or intent).",
+                  "Any differences in wording between the two definitions do not constitute a difference in meaning (i.e., paraphrasing is acceptable; conflicting meaning is not).",
+                  "If a material discrepancy is found between the QAlchemy definition and the commonly accepted public definition, the QAlchemy glossary entry is flagged for content review.",
+                  "The QAlchemy glossary definition of \"Code Complete\" cites or is traceable to a credible source (e.g., industry-recognized reference)."
+            ]
+      }
+}

@@ -108,7 +108,7 @@ class RuntimeRequest:
     # Role
     #
 
-    role: Path
+    role: Path | None
 
     #
     # Target Feature

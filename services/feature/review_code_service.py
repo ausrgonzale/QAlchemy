@@ -135,15 +135,27 @@ class ReviewCodeService:
             source_parts,
         )
 
-        request = self._work_order_transformer.transform(
+        request = self._work_order_transformer.work_order_execution(
             work_order,
             source_code=source_code,
         )
 
         client = self._execution_service.client_service.create()
 
+        self._logger.log(
+            level="INFO",
+            operation="execute",
+            message="LLM request started.",
+        )
+
         review = client.generate(
             request,
+        )
+
+        self._logger.log(
+            level="INFO",
+            operation="execute",
+            message="LLM response received.",
         )
 
         runtime_context = RuntimeContext()

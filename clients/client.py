@@ -10,6 +10,10 @@ behind the same public interface.
 
 from types import SimpleNamespace
 
+from agents.contracts.res_agent_response import AgentResponse
+from agents.tools.tool_call import ToolCall
+from agents.tools.tool_definition import ToolDefinition
+
 try:
     import ollama
 except ModuleNotFoundError:
@@ -78,6 +82,67 @@ class Client:
 
         return self._generate_bulk(prompt)
 
+    def agent_turn(
+        self,
+        messages: list[dict[str, object]],
+        tools: tuple[ToolDefinition, ...],
+    ) -> AgentResponse:
+        """
+        Submit an Agent turn to the configured provider.
+
+        Args:
+            messages:
+                Agent conversation messages.
+
+            tools:
+                Tools available to the Agent.
+
+        Returns:
+            Provider-neutral Agent response.
+        """
+
+        provider_messages = self._build_agent_messages(messages)
+
+        response = self._client.chat(
+            model=self._model,
+            messages=provider_messages,
+            tools=self._build_tools(tools),
+            stream=False,
+        )
+
+        tool_calls = tuple(
+            ToolCall(
+                name=tool_call.function.name,
+                arguments=dict(tool_call.function.arguments),
+            )
+            for tool_call in (response.message.tool_calls or ())
+        )
+
+        return AgentResponse(
+            content=response.message.content or "",
+            tool_calls=tool_calls,
+        )
+
+    def _build_tools(
+        self,
+        tools: tuple[ToolDefinition, ...],
+    ) -> list[dict[str, object]]:
+        """
+        Convert provider-neutral tool definitions into the provider format.
+        """
+
+        return [
+            {
+                "type": "function",
+                "function": {
+                    "name": tool.name,
+                    "description": tool.description,
+                    "parameters": tool.parameters,
+                },
+            }
+            for tool in tools
+        ]
+
     def _build_messages(
         self,
         prompt: str,
@@ -130,3 +195,32 @@ class Client:
         )
 
         return response.message.content or ""
+
+    def _build_agent_messages(
+        self,
+        messages: list[dict[str, object]],
+    ) -> list[dict[str, object]]:
+        """
+        Convert provider-neutral Agent messages into provider-specific messages.
+        """
+        converted_messages: list[dict[str, object]] = []
+
+        for message in messages:
+            converted_message = dict(message)
+            tool_calls = converted_message.get("tool_calls")
+
+            if isinstance(tool_calls, tuple):
+                converted_message["tool_calls"] = [
+                    {
+                        "type": "function",
+                        "function": {
+                            "name": tool_call.name,
+                            "arguments": tool_call.arguments,
+                        },
+                    }
+                    for tool_call in tool_calls
+                ]
+
+            converted_messages.append(converted_message)
+
+        return converted_messages

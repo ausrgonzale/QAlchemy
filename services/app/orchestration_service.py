@@ -42,11 +42,18 @@ Output
 
 from pathlib import Path
 
+from agents.contracts.res_agent_results import RequirementsAgentResult
 from scripts.core.runtime_request import RuntimeRequest
 from scripts.core.work_order import WorkOrder
+from scripts.core.work_order_transformer import WorkOrderTransformer
 from scripts.core.work_order_writer import WorkOrderWriter
-from scripts.utils.feature_target_mapper import map_feature_code
+from scripts.utils.feature_target_mapper import (
+    map_feature_code,
+    map_requirements_capability,
+)
 from scripts.utils.file_writer import FileWriter
+from scripts.utils.relative_path import relative_path
+from scripts.utils.route_resolver import RouteResolver
 from scripts.utils.source_code_resolver import SourceCodeResolver
 from scripts.utils.work_order_number_generator import (
     WorkOrderNumberGenerator,
@@ -56,7 +63,9 @@ from services.app.app_execution_service import AppExecutionService
 from services.app.work_order_builder_service import (
     WorkOrderBuilderService,
 )
+from services.core.logger_service import LoggerService
 from services.feature.generate_code_service import GenerateCodeService
+from services.feature.requirements_eval_service import RequirementsEvalService
 from services.feature.review_code_service import ReviewCodeService
 
 
@@ -77,6 +86,9 @@ class OrchestrationService:
         execution_service: AppExecutionService,
         generate_code_service: GenerateCodeService,
         review_code_service: ReviewCodeService,
+        requirements_eval_service: RequirementsEvalService,
+        route_resolver: RouteResolver,
+        logger_service: LoggerService,
     ) -> None:
         """
         Initialize the orchestration service.
@@ -84,17 +96,21 @@ class OrchestrationService:
 
         self._execution_service = execution_service
 
+        self._route_resolver = route_resolver
         self._work_order_builder = WorkOrderBuilderService()
         self._work_order_writer = WorkOrderWriter()
+        self._work_order_transformer = WorkOrderTransformer()
         self._work_order_number_generator = WorkOrderNumberGenerator()
         self._source_code_resolver = SourceCodeResolver()
         self._file_writer = FileWriter()
+        self._logger_service = logger_service
 
         #
         # Feature Services
         #
         self._generate_code_service = generate_code_service
         self._review_code_service = review_code_service
+        self._requirements_eval_service = requirements_eval_service
 
         #
         # Route Table
@@ -105,16 +121,20 @@ class OrchestrationService:
 
     def _route(
         self,
-        runtime_request: RuntimeRequest,
+        capability,
+        runtime_request,
         work_order: WorkOrder,
         workspace: WorkSpace,
         work_order_name: str,
-    ) -> None:
+    ) -> str | RequirementsAgentResult | None:
         """
         Route the Work Order to the appropriate workflow.
         """
 
-        if runtime_request.target == "review_code":
+        #
+        # Review Code Workflow
+        #
+        if capability == "review_code":
 
             source_files = self._source_code_resolver.resolve(
                 runtime_request.source_code,
@@ -132,18 +152,41 @@ class OrchestrationService:
                 work_order_name=work_order_name,
             )
 
-            return
+            return rendered_report
 
+        #
+        # Requirements Evaluation Workflow
+        #
+        if capability == "evaluate":
+
+            result = self._requirements_eval_service.execute(
+                work_order,
+                workspace,
+                runtime_request.source_code,
+                "evaluate_requirement",
+            )
+
+            self._persist_requirements_report(
+                result.report,
+                workspace=workspace,
+                work_order_name=work_order_name,
+            )
+
+            return result
+
+        #
+        # Registered Feature Workflows
+        #
         handler = self._routes.get(
-            runtime_request.target,
+            capability,
         )
 
         if handler is None:
             raise ValueError(
-                f"Unsupported target: {runtime_request.target}",
+                f"Unsupported target: {capability}",
             )
 
-        handler(
+        return handler(
             work_order,
             workspace,
         )
@@ -190,24 +233,56 @@ class OrchestrationService:
                 content=rendered_report,
             )
 
+    def _persist_requirements_report(
+        self,
+        rendered_report: str,
+        workspace: WorkSpace,
+        work_order_name: str,
+    ) -> None:
+        """
+        Persist the requirements evaluation report to the WorkSpace.
+        """
+
+        workspace_report_path = (
+            workspace.output_root / "requirements_evaluation_report.md"
+        )
+
+        self._file_writer.write(
+            path=workspace_report_path,
+            content=rendered_report,
+        )
+
     def execute(
         self,
         runtime_request: RuntimeRequest,
-    ) -> None:
+    ) -> RequirementsAgentResult | str | None:
         """
         Execute the requested target.
         """
 
-        work_order = self._work_order_builder.build(
+        route = self._route_resolver.resolve(
             runtime_request,
         )
 
+        capability = route.capability
+
+        work_order = self._work_order_builder.build(
+            runtime_request,
+            route,
+        )
+
         feature_code = map_feature_code(
-            work_order.target,
+            route.target,
         )
 
         work_order_id = self._work_order_number_generator.generate(
             feature=feature_code,
+        )
+
+        self._logger_service.log(
+            level="INFO",
+            message="Work Order execution started.",
+            operation="execution",
         )
 
         #
@@ -227,25 +302,14 @@ class OrchestrationService:
         workspace.create()
 
         #
-        # Always persist the Work Order inside its workspace.
+        # Persist the initial Work Order inside the workspace.
         #
         self._work_order_writer.write(
-            work_order=work_order,
+            content=self._work_order_transformer.work_order_execution(
+                work_order=work_order,
+                capability=capability,
+            ),
             path=workspace.work_order_path,
-        )
-
-        role_path = workspace.workspace_root / runtime_request.role.name
-
-        role_path.write_text(
-            work_order.role,
-            encoding="utf-8",
-        )
-
-        deliverable_path = workspace.workspace_root / runtime_request.deliverable.name
-
-        deliverable_path.write_text(
-            work_order.deliverable,
-            encoding="utf-8",
         )
 
         #
@@ -258,13 +322,99 @@ class OrchestrationService:
             )
 
             self._work_order_writer.write(
-                work_order=work_order,
+                content=self._work_order_transformer.work_order_execution(
+                    work_order=work_order,
+                    capability=capability,
+                ),
                 path=persistent_work_order_path,
             )
 
-        self._route(
+        deliverable_path = workspace.workspace_root / runtime_request.deliverable.name
+
+        deliverable_path.write_text(
+            work_order.deliverable,
+            encoding="utf-8",
+        )
+
+        self._logger_service.log(
+            level="INFO",
+            message="Feature execution started.",
+            operation="execution",
+        )
+
+        result = self._route(
+            capability=capability,
             runtime_request=runtime_request,
             work_order=work_order,
             workspace=workspace,
             work_order_name=work_order_name,
         )
+
+        self._logger_service.log(
+            level="INFO",
+            message="Feature execution completed.",
+            operation="execution",
+        )
+
+        if isinstance(result, RequirementsAgentResult):
+
+            #
+            # Assemble Work Order completion context.
+            #
+            capability = map_requirements_capability(result.capability.value)
+            role = result.role
+
+            source_code = "\n".join(
+                str(relative_path(path)) for path in runtime_request.source_code
+            )
+
+            #
+            # Transform the completed Work Order.
+            #
+            completed_work_order = self._work_order_transformer.work_order_completion(
+                work_order=work_order,
+                source_code=source_code,
+                capability=capability,
+                role=role,
+            )
+
+            #
+            # Persist the completed Work Order inside the workspace.
+            #
+            self._work_order_writer.write(
+                content=completed_work_order,
+                path=workspace.work_order_path,
+            )
+
+            #
+            # Persist a canonical Work Order copy when enabled.
+            #
+            if runtime.persist_to_disk:
+
+                persistent_work_order_path = (
+                    Path(runtime.directory) / f"{work_order_name}.md"
+                )
+
+                self._work_order_writer.write(
+                    content=completed_work_order,
+                    path=persistent_work_order_path,
+                )
+
+            #
+            # Persist the Agent-selected role.
+            #
+            role_path = Path("agents") / "roles" / f"{role}.md"
+            role_content = role_path.read_text(encoding="utf-8")
+
+            workspace_role_path = workspace.workspace_root / f"{role}.md"
+
+            workspace_role_path.write_text(
+                role_content,
+                encoding="utf-8",
+            )
+
+            #
+            # Return the report content to the caller.
+            #
+
+        return result

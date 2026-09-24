@@ -75,18 +75,30 @@ class GenerateCodeService:
             operation="execute",
         )
 
-        request = self._work_order_transformer.transform(work_order)
+        request = self._work_order_transformer.work_order_execution(
+            work_order,
+            capability="generate_code",
+        )
 
         client = self._execution_service.client_service.create()
 
+        self._logger.log(
+            level="INFO",
+            message="LLM request started.",
+            operation="execute",
+        )
+
         response = client.generate(request)
+
+        self._logger.log(
+            level="INFO",
+            message="LLM response received.",
+            operation="execute",
+        )
 
         normalized_response = normalize_provider_response(
             response,
         )
-
-        print(">>> NORMALIZED RESPONSE:")
-        print(normalized_response)
 
         artifacts = create_generated_artifacts(
             work_order,

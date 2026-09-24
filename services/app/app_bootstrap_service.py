@@ -30,10 +30,14 @@ import logging
 from pathlib import Path
 from typing import Self
 
+from agents.requirements_agent import RequirementsAgent
+from agents.tools.read_file_tool import ReadFileTool
 from scripts.app.bootstrap_logging import configure_bootstrap_logging
 from scripts.core.logger import Logger
 from scripts.core.logger_config import LoggerConfig
+from scripts.core.provider_transformer import ProviderTransformer
 from scripts.core.work_order_transformer import WorkOrderTransformer
+from scripts.utils.route_resolver import RouteResolver
 from services.app.app_configuration_service import AppConfigurationService
 from services.app.app_execution_service import AppExecutionService
 from services.app.orchestration_service import OrchestrationService
@@ -41,6 +45,7 @@ from services.core.client_service import ClientService
 from services.core.exception_handling_service import ExceptionHandlingService
 from services.core.logger_service import LoggerService
 from services.feature.generate_code_service import GenerateCodeService
+from services.feature.requirements_eval_service import RequirementsEvalService
 from services.feature.review_code_service import ReviewCodeService
 
 logger = logging.getLogger(__name__)
@@ -84,6 +89,12 @@ class AppBootstrapService:
         #
         self._generate_code_service: GenerateCodeService | None = None
         self._review_code_service: ReviewCodeService | None = None
+        self._requirements_eval_service: RequirementsEvalService | None = None
+
+        #
+        # Agents
+        #
+        self._requirements_agent: RequirementsAgent | None = None
 
     @property
     def configuration(self) -> AppConfigurationService:
@@ -119,6 +130,13 @@ class AppBootstrapService:
 
         assert self._review_code_service is not None
         return self._review_code_service
+
+    @property
+    def requirements_eval_service(self) -> RequirementsEvalService:
+        """Return the requirements evaluation service."""
+
+        assert self._requirements_eval_service is not None
+        return self._requirements_eval_service
 
     @property
     def exception_handling_service(self) -> ExceptionHandlingService:
@@ -166,6 +184,20 @@ class AppBootstrapService:
 
             logger.info("Client service initialized.")
 
+            logger.info("Routing agent initialized.")
+
+            self._requirements_agent = RequirementsAgent(
+                client=self.client_service.create(),
+                provider_transformer=ProviderTransformer(),
+                read_file_tool=ReadFileTool(),
+            )
+
+            route_resolver = RouteResolver(
+                client=self.client_service.create(),
+            )
+
+            logger.info("Requirements agent initialized.")
+
             #
             # Logger
             #
@@ -178,6 +210,11 @@ class AppBootstrapService:
             self._logger_service = LoggerService(
                 logger=logger_instance,
                 component="Application",
+            )
+
+            orchestration_logger_service = LoggerService(
+                logger=logger_instance,
+                component="OrchestrationService",
             )
 
             logger.info("Logger service initialized.")
@@ -222,6 +259,12 @@ class AppBootstrapService:
                 work_order_transformer=work_order_transformer,
             )
 
+            self._requirements_eval_service = RequirementsEvalService(
+                execution_service=self.execution_service,
+                work_order_transformer=work_order_transformer,
+                requirements_agent=self._requirements_agent,
+            )
+
             logger.info("Feature services initialized.")
             logger.info("Application bootstrap completed successfully.")
 
@@ -232,6 +275,9 @@ class AppBootstrapService:
                 execution_service=self._execution_service,
                 generate_code_service=self._generate_code_service,
                 review_code_service=self._review_code_service,
+                requirements_eval_service=self.requirements_eval_service,
+                logger_service=orchestration_logger_service,
+                route_resolver=route_resolver,
             )
 
             logger.info("Orchestration service initialized.")

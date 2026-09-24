@@ -69,6 +69,8 @@ Future Consumers:
 ===============================================================================
 """
 
+from typing import ClassVar
+
 from scripts.core.work_order import WorkOrder
 
 
@@ -81,13 +83,21 @@ class WorkOrderTransformer:
     _HEADER_DIVIDER = "=" * 79
     _SECTION_DIVIDER = "-" * 79
 
-    def transform(
+    _INPUT_LABELS: ClassVar[dict[str, str]] = {
+        "evaluate_requirement": "REQUIREMENT",
+        "generate_code": "SOURCE CODE",
+        "review_code": "SOURCE CODE",
+    }
+
+    def work_order_execution(
         self,
         work_order: WorkOrder,
         source_code: str = "",
+        capability: str = "",
     ) -> str:
         """
-        Transforms a WorkOrder into an LLM request.
+        Transform a WorkOrder into the execution representation
+        provided to an Agent.
         """
 
         sections = [
@@ -95,7 +105,39 @@ class WorkOrderTransformer:
             self._render_section("TASK", work_order.task),
             self._render_section("ROLE", work_order.role),
             self._render_section("TARGET", work_order.target),
-            self._render_section("SOURCE CODE", source_code),
+            self._render_section("CAPABILITY", capability),
+            self._render_section("INPUT CONTENT", source_code),
+            self._render_section("DELIVERABLE", work_order.deliverable),
+            self._render_section("REFERENCES", work_order.references),
+        ]
+
+        return "\n\n".join(sections)
+
+    def work_order_completion(
+        self,
+        work_order: WorkOrder,
+        source_code: str = "",
+        capability: str = "",
+        role: str = "",
+    ) -> str:
+        """
+        Transform a WorkOrder into its completed persistent representation.
+        """
+
+        input_label = self._INPUT_LABELS.get(
+            capability,
+            "INPUT CONTENT",
+        )
+
+        sections = [
+            self._render_banner(),
+            self._render_section("TASK", work_order.task),
+            self._render_section("ROLE", role or work_order.role),
+            self._render_section(
+                "TARGET",
+                capability or work_order.target,
+            ),
+            self._render_section(input_label, source_code),
             self._render_section("DELIVERABLE", work_order.deliverable),
             self._render_section("REFERENCES", work_order.references),
         ]

@@ -43,7 +43,15 @@ code.
 _FEATURE_CODES = {
     "generate_code": "GCS",
     "review_code": "RCS",
-    "requirement_evaluation": "RRE",
+    "requirements": "RES",
+}
+
+_REQUIREMENTS_CAPABILITY_MAP = {
+    "evaluate": "evaluate_requirement",
+    "generate": "generate_code",
+    "refine": "refine_requirement",
+    "create_acceptance_criteria": "create_acceptance_criteria",
+    "create_test_cases": "create_test_cases",
 }
 
 
@@ -69,3 +77,12 @@ def map_feature_code(
         return _FEATURE_CODES[target]
     except KeyError as exc:
         raise ValueError(f"Unsupported Work Order target: {target}") from exc
+
+
+def map_requirements_capability(capability: str) -> str:
+    try:
+        return _REQUIREMENTS_CAPABILITY_MAP[capability]
+    except KeyError as exc:
+        raise ValueError(
+            f"Unsupported Requirements Agent capability: {capability}"
+        ) from exc

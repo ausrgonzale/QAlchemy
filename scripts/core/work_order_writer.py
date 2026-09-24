@@ -63,8 +63,6 @@ Future Consumers:
 
 from pathlib import Path
 
-from scripts.core.work_order import WorkOrder
-from scripts.core.work_order_transformer import WorkOrderTransformer
 from scripts.utils.file_writer import FileWriter
 
 
@@ -75,14 +73,11 @@ class WorkOrderWriter:
 
     def __init__(self) -> None:
         """Initialize the Work Order Writer."""
-
-        self._work_order_transformer = WorkOrderTransformer()
-
         self._file_writer = FileWriter()
 
     def write(
         self,
-        work_order: WorkOrder,
+        content: str,
         path: Path,
     ) -> None:
         """
@@ -96,11 +91,7 @@ class WorkOrderWriter:
                 Destination markdown file.
         """
 
-        markdown = self._work_order_transformer.transform(
-            work_order,
-        )
-
         self._file_writer.write(
             path=path,
-            content=markdown,
+            content=content,
         )
